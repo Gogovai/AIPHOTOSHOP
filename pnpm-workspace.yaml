@@ -1,0 +1,14 @@
+packages:
+  - "apps/*"
+  - "packages/*"
+
+# pnpm blocks dependency lifecycle scripts by default. `unrs-resolver` ships a
+# native binary that eslint's TypeScript import resolver depends on, so its
+# build script is explicitly approved.
+allowBuilds:
+  unrs-resolver: true
+
+minimumReleaseAgeExclude:
+  - "@next/eslint-plugin-next@16.3.8"
+  - eslint-config-next@16.3.8
+  - next@16.3.8

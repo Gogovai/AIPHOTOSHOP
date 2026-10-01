@@ -1,0 +1,25 @@
+{
+  "name": "@aiphotoshop/color-engine",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Color system: color spaces, palettes, contrast analysis and deterministic color maths.",
+  "type": "module",
+  "sideEffects": false,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json",
+    "lint": "eslint ."
+  },
+  "devDependencies": {
+    "eslint": "9.39.5",
+    "typescript": "6.0.3"
+  }
+}

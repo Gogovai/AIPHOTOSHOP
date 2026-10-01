@@ -1,0 +1,16 @@
+# Normalize line endings to LF in the repository and in the working tree.
+# Prettier is configured with `endOfLine: "lf"`, so a checkout that silently
+# rewrites files to CRLF would make `pnpm format:check` fail.
+* text=auto eol=lf
+
+# Binary assets are never normalized.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.avif binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.pdf binary
