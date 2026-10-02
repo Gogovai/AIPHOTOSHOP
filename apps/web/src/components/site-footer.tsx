@@ -11,7 +11,7 @@ export function SiteFooter() {
         </div>
 
         <div className="font-mono text-[10px] leading-5 tracking-[0.14em] text-ink-faint sm:text-right">
-          <p>MILESTONE 001 — PROJECT FOUNDATION</p>
+          <p>MILESTONE 002 — EDITOR SHELL</p>
           <p>SOURCE OF TRUTH: DESIGN DOCUMENT</p>
         </div>
       </div>

@@ -103,7 +103,10 @@ eventually motion. This is not a toy generator.
 
 ## Current state
 
-This repository is at **Milestone 001 — Project foundation**. It contains the
-monorepo, package boundaries, tooling, and the product surface. The editor, the
-layer engine, and the AI systems are intentionally not implemented yet. See
-`docs/DEVELOPMENT_ROADMAP.md`.
+This repository is at **Milestone 002 — Editor shell**. The monorepo, package
+boundaries, tooling, and product surface from Milestone 001 are in place, and
+the professional editor shell now exists at `/editor/[projectId]`: top
+application bar, tool rail, canvas viewport with an example artboard, layers
+panel, inspector, and status bar. It is a shell only — real document state,
+layers, rendering, selection, editing, undo/redo, AI, persistence, and export
+are intentionally not implemented yet. See `docs/DEVELOPMENT_ROADMAP.md`.

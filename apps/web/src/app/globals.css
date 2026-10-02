@@ -22,6 +22,12 @@
   --color-canvas-line: #2b2b31;
   --color-canvas-ink: #e8e6e3;
   --color-canvas-muted: #8f8d95;
+
+  /*
+   * The only shadow in the system: the artboard floating above the dark
+   * editor workspace. Kept tight and directional — no glow.
+   */
+  --shadow-artboard: 0 1px 2px rgb(0 0 0 / 0.4), 0 24px 64px rgb(0 0 0 / 0.35);
 }
 
 @theme inline {

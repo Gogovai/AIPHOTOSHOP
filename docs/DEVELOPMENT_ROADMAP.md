@@ -20,7 +20,7 @@ previous one is complete.
 
 ---
 
-## Milestone 002 — Editor shell
+## Milestone 002 — Editor shell ✅
 
 **Goal:** the editor exists as a shell with no real document behind it.
 
@@ -31,6 +31,24 @@ previous one is complete.
   separate from any document.
 - Keyboard and pointer interaction scaffolding.
 - Empty states that describe what will appear there.
+
+**Delivered**
+
+- Editor route `/editor/[projectId]` (any id loads; no lookup yet).
+- Professional shell: top application bar, tool rail, canvas viewport with a
+  centered 1080 × 1350 artboard, layers panel, inspector, status bar.
+- Components under `apps/web/src/components/editor/`; the route composes the
+  shell, and `"use client"` is limited to the tool-rail island.
+- Panels render labelled structural placeholder rows and `—` field values;
+  `design-schema` and the packages are untouched.
+- Shell states (active tool highlight, layer visibility/lock/selection marks)
+  are view-only and provably separate from document state, which does not
+  exist yet.
+
+**Not yet implemented (by design)**
+
+- Real document state, real layers, rendering engine, selection, transforms,
+  editing, undo/redo, AI, persistence, export.
 
 **Done when:** the editor shell renders, resizes correctly, and its state is
 provably independent of document state.

@@ -1,4 +1,7 @@
+import Link from "next/link";
+
 import { DocumentPreview } from "@/components/document-preview";
+import { EDITOR_HREF } from "@/components/editor/editor-types";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 
@@ -53,17 +56,17 @@ const PACKAGES = [
 ] as const;
 
 const IN_MILESTONE = [
-  "pnpm workspace orchestrated by Turborepo",
-  "Seven package boundaries with build, lint and typecheck",
-  "Strict TypeScript with shared compiler settings",
-  "ESLint flat config and Prettier",
-  "Vitest harness wired for future tests",
-  "Product documentation and agent rules",
+  "Professional editor shell at /editor/[projectId]",
+  "Top bar, tool rail, canvas viewport, sidebar and status bar",
+  "Reusable, accessible editor regions with no hidden state",
+  "Component tests covering every editor region",
+  "pnpm workspace, strict TypeScript, ESLint, Prettier and Vitest",
 ] as const;
 
 const NOT_YET = [
-  "Canvas editor and rendering surface",
-  "Layer engine and design document system",
+  "Layer engine and real document tree",
+  "Canvas rendering, selection and transforms",
+  "Undo / redo and document persistence",
   "AI provider integration",
   "Supabase persistence",
   "Export pipeline",
@@ -97,9 +100,16 @@ export default function Home() {
               </p>
 
               <div className="mt-9 flex flex-wrap items-center gap-3">
+                <Link
+                  href={EDITOR_HREF}
+                  data-testid="open-editor"
+                  className="border border-ink bg-ink px-4 py-2.5 text-[13px] font-medium text-paper transition-colors hover:bg-ink-muted"
+                >
+                  Open Editor
+                </Link>
                 <a
                   href="#document"
-                  className="border border-ink bg-ink px-4 py-2.5 text-[13px] font-medium text-paper transition-colors hover:bg-ink-muted"
+                  className="border border-line-strong px-4 py-2.5 text-[13px] font-medium text-ink transition-colors hover:bg-surface"
                 >
                   Explore the document model
                 </a>
@@ -112,7 +122,7 @@ export default function Home() {
               </div>
 
               <p className="mt-8 font-mono text-[10px] tracking-[0.16em] text-ink-faint">
-                FOUNDATION RELEASE · NO EDITOR YET
+                FOUNDATION RELEASE · EDITOR SHELL IN MILESTONE 002
               </p>
             </div>
 
@@ -173,7 +183,8 @@ export default function Home() {
                   @aiphotoshop/web
                 </span>
                 <span className="text-[14px] leading-6 text-ink-muted">
-                  The Next.js product surface. The editor shell lands here in Milestone 002.
+                  The Next.js product surface. The professional editor shell lives here from
+                  Milestone 002.
                 </span>
               </li>
             </ul>
@@ -184,11 +195,12 @@ export default function Home() {
           <div className="mx-auto max-w-6xl px-6 py-20">
             <Eyebrow>Status</Eyebrow>
             <h2 className="mt-5 text-[28px] leading-tight font-semibold tracking-[-0.02em] text-ink sm:text-[34px]">
-              Milestone 001 — Project foundation
+              Milestone 002 — Editor shell
             </h2>
             <p className="mt-4 max-w-2xl text-[15px] leading-7 text-ink-muted">
-              What exists today is the foundation and nothing beyond it. The editor, the layer
-              engine and the AI systems are deliberately unimplemented until their milestones.
+              The workspace now exists: a professional editor shell you can open and navigate. It is
+              structure only — layout and accessible regions — with no document mutation, rendering
+              engine, AI, persistence or export yet. Those arrive in their own milestones.
             </p>
 
             <div className="mt-12 grid grid-cols-1 gap-10 border-t border-line pt-10 md:grid-cols-2">
@@ -222,7 +234,7 @@ export default function Home() {
             </div>
 
             <p className="mt-12 border-t border-line pt-6 font-mono text-[10px] tracking-[0.16em] text-ink-faint">
-              NEXT · MILESTONE 002 — EDITOR SHELL
+              NEXT · MILESTONE 003 — LAYER ENGINE
             </p>
           </div>
         </section>

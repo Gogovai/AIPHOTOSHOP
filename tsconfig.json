@@ -1,7 +1,8 @@
 {
   "extends": "./tsconfig.base.json",
   "compilerOptions": {
-    "types": ["node"]
+    "types": ["node"],
+    "jsx": "react-jsx"
   },
   "include": ["vitest.config.mts", "tests/**/*.ts", "tests/**/*.tsx"],
   "exclude": ["node_modules", "**/dist", "**/.next", "**/.turbo"]
