@@ -1,7 +1,9 @@
 # Design Engine
 
-> Status: specification. The engine is implemented from Milestone 004; this
-> document defines the model it must satisfy.
+> Status: the structural operation set is implemented (Milestone 003) in
+> `@aiphotoshop/design-engine`. Transform, style, text, image, vector, and
+> document operations, plus history/change sets and the persistence pipeline,
+> are _planned_ — see `docs/DEVELOPMENT_ROADMAP.md`.
 
 ## Responsibility
 
@@ -28,41 +30,45 @@ unit of review, and the unit of history.
 
 ## Operation shape
 
-An operation is plain, serializable data:
+An operation is plain, serializable data. The implemented structural set is the
+`DocumentOperation` discriminated union:
 
 ```
-{
-  "type": "text.setContent",
-  "targetId": "<stable node id>",
-  "payload": { "content": "SOLSTICE" }
-}
+{ "operation": "renameNode", "nodeId": "<stable node id>", "name": "SOLSTICE" }
+{ "operation": "reorderNode", "nodeId": "<stable node id>", "index": 0 }
+{ "operation": "reparentNode", "nodeId": "<id>", "parentId": "<id>" }
 ```
 
 Every operation has:
 
-| Field      | Meaning                                                 |
-| ---------- | ------------------------------------------------------- |
-| `type`     | A registered operation name.                            |
-| `targetId` | The stable ID of the affected node (or document scope). |
-| `payload`  | Operation-specific, schema-validated arguments.         |
+| Field                | Meaning                                         |
+| -------------------- | ----------------------------------------------- |
+| `operation`          | A registered operation name.                    |
+| `nodeId` / `nodeIds` | The stable id(s) of the affected node(s).       |
+| remaining            | Operation-specific, schema-validated arguments. |
 
-Operations are data, not callbacks. They can be logged, diffed, stored, and
-replayed.
+The same changes are also exposed as typed functions — `addNode(doc, node)`,
+`removeNode(doc, id)`, `renameNode`, `reparentNode`, `reorderNode`, `groupNodes`,
+`ungroupNode`, `setVisibility`, `setLocked` — and `applyOperation` dispatches the
+union to them. Operations are data, not callbacks, so they can be logged,
+diffed, stored, and replayed.
 
 ## Applying an operation
 
 Applying an operation is a pipeline:
 
-1. **Validate** — the operation name is registered and the payload matches its
-   schema.
-2. **Resolve** — the target node exists and is not locked for this operation
-   class.
-3. **Precheck** — the resulting document would still satisfy every layer-system
+1. **Validate** — the operation is known and its arguments are well-formed.
+2. **Resolve** — the target node exists and is a valid parent/child position.
+3. **Precheck** — the move is legal (no cycles, no moving the root, valid
+   sibling index) and the resulting document would satisfy every layer-system
    invariant.
-4. **Apply** — produce a new document revision.
-5. **Record** — append to the history entry for this change set.
+4. **Apply** — return a new document; the input is never mutated.
+5. **Record** — append to the history entry for this change set. _(Planned,
+   Milestone 004.)_
 
-If any stage fails, the document is unchanged. Operations are all-or-nothing.
+If any stage fails the engine throws a `DesignEngineError` with a stable code
+(`NODE_NOT_FOUND`, `ROOT_PROTECTED`, `INVALID_MOVE`, …) and the input document is
+unchanged. Operations are all-or-nothing.
 
 ## Immutability and revisions
 
@@ -87,15 +93,15 @@ changes the AI made, without touching the designer's own edits.
 
 ## Operation families
 
-| Family    | Examples                                                      |
-| --------- | ------------------------------------------------------------- |
-| Structure | add node, remove node, reorder, group, ungroup, reparent      |
-| Transform | translate, rotate, scale, align, distribute                   |
-| Style     | set fill, set stroke, set opacity, set blend mode, set radius |
-| Text      | set content, set style, set box, set alignment                |
-| Image     | set asset, crop, apply mask, set adjustment                   |
-| Vector    | set path, boolean operation, set node handles                 |
-| Document  | resize canvas, set background, set color space                |
+| Family    | Status      | Examples                                                                              |
+| --------- | ----------- | ------------------------------------------------------------------------------------- |
+| Structure | implemented | add node, remove node, rename, reorder, group, ungroup, reparent, set visibility/lock |
+| Transform | _planned_   | translate, rotate, scale, align, distribute                                           |
+| Style     | _planned_   | set fill, set stroke, set opacity, set blend mode, set radius                         |
+| Text      | _planned_   | set content, set style, set box, set alignment                                        |
+| Image     | _planned_   | set asset, crop, apply mask, set adjustment                                           |
+| Vector    | _planned_   | set path, boolean operation, set node handles                                         |
+| Document  | _planned_   | resize canvas, set background, set color space                                        |
 
 The list is closed and versioned. AI capability is exactly the set of registered
 operations — no more.
@@ -118,7 +124,8 @@ can correct itself rather than retry blindly.
 
 Given the same starting revision and the same operation list, the engine must
 produce an identical resulting revision. No timestamps, random values, or
-environment-dependent behaviour may leak into the document.
+environment-dependent behaviour may leak into the document. Structural
+operations never touch `metadata.updatedAt`; they only change the node map.
 
 This property is what makes AI-generated designs reviewable and regression-
 testable.

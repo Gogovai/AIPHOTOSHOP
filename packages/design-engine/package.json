@@ -5,6 +5,9 @@
   "description": "Deterministic operations over a design document: create, transform, reorder, group and align editable objects.",
   "type": "module",
   "sideEffects": false,
+  "dependencies": {
+    "@aiphotoshop/design-schema": "workspace:*"
+  },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {

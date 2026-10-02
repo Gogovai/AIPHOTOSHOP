@@ -1,7 +1,9 @@
 # Layer System
 
-> Status: specification. The layer system is implemented in Milestone 003; this
-> document defines the model the implementation must satisfy.
+> Status: partially implemented (Milestone 003). The tree, identity, ordering,
+> visibility/locking, validation, and serialization rules below are implemented
+> in `@aiphotoshop/design-schema` and `@aiphotoshop/design-engine`. Node kinds and
+> capabilities marked _planned_ are not implemented yet.
 
 ## Purpose
 
@@ -35,17 +37,21 @@ Two kinds of node exist:
 
 ## Node kinds
 
-| Kind     | Renders                      | Key properties                                  |
-| -------- | ---------------------------- | ----------------------------------------------- |
-| `canvas` | The document surface         | size, background, color space, bleed            |
-| `group`  | Nothing itself; its children | transform, opacity, blend mode, clip            |
-| `fill`   | A solid or gradient area     | fill, opacity, blend mode                       |
-| `image`  | Raster image data            | asset reference, crop, mask, adjustments        |
-| `text`   | Typeset text                 | text content, typographic style, box, alignment |
-| `shape`  | A geometric primitive        | geometry, fill, stroke, corner radii            |
-| `svg`    | Vector source                | source data, fills, strokes, transform          |
-| `mask`   | Alpha applied to a sibling   | mask source, feather, invert                    |
-| `effect` | Non-destructive adjustment   | effect type and parameters                      |
+| Kind     | Status      | Renders                      | Key properties (implemented)                   |
+| -------- | ----------- | ---------------------------- | ---------------------------------------------- |
+| `canvas` | implemented | The document surface         | width, height, background, children            |
+| `group`  | implemented | Nothing itself; its children | children                                       |
+| `image`  | implemented | Raster image data            | src, geometry, opacity                         |
+| `text`   | implemented | Typeset text                 | text, font family/size/weight, color, geometry |
+| `shape`  | implemented | A geometric primitive        | kind, fill, stroke, stroke width, geometry     |
+| `svg`    | implemented | Vector source                | markup, geometry                               |
+| `fill`   | _planned_   | A solid or gradient area     | fill, blend mode                               |
+| `mask`   | _planned_   | Alpha applied to a sibling   | mask source, feather, invert                   |
+| `effect` | _planned_   | Non-destructive adjustment   | effect type and parameters                     |
+
+Every node also carries the shared base fields: `id`, `type`, `name`,
+`parentId`, `visible`, `locked`, and `opacity`. Nodes are a discriminated union
+on `type`, so a leaf can never declare `children`.
 
 The set is closed: new kinds are added deliberately, never by ad-hoc string
 keys.
@@ -78,6 +84,10 @@ Reordering is an operation, so it is undoable and can be proposed by the AI as
 clearly as by a drag in the UI.
 
 ## Transforms
+
+> _Planned._ Not implemented in Milestone 003. Leaf nodes carry an explicit
+> `geometry` box (`x`, `y`, `width`, `height`); transform composition, rotation,
+> and derived bounds arrive with the design-tools milestone.
 
 Each node carries a transform relative to its parent. Transforms compose down
 the tree.
@@ -123,7 +133,9 @@ The layer system must always satisfy:
 8. Operations never leave the document in a partially valid state.
 
 These invariants are the contract the design engine enforces. Any operation that
-would break one is rejected before it is applied.
+would break one is rejected before it is applied. `validateDocument` reports
+violations with diagnostics that name the offending node and ids, and
+`assertValidDocument` is used at the serialization boundary.
 
 ## Relationship to the other packages
 

@@ -27,11 +27,11 @@ const PRINCIPLES = [
 const PACKAGES = [
   {
     name: "@aiphotoshop/design-schema",
-    body: "The serializable contract for a design document: canvas, layers, objects, stable identifiers.",
+    body: "The serializable contract for a design document: canvas, nodes, stable opaque identifiers and lossless JSON round-trips.",
   },
   {
     name: "@aiphotoshop/design-engine",
-    body: "Deterministic operations that produce a new document revision: create, transform, reorder, group.",
+    body: "Deterministic structural operations that return a new document: add, remove, rename, reparent, reorder, group, ungroup.",
   },
   {
     name: "@aiphotoshop/ai-core",
@@ -56,16 +56,16 @@ const PACKAGES = [
 ] as const;
 
 const IN_MILESTONE = [
-  "Professional editor shell at /editor/[projectId]",
-  "Top bar, tool rail, canvas viewport, sidebar and status bar",
-  "Reusable, accessible editor regions with no hidden state",
-  "Component tests covering every editor region",
-  "pnpm workspace, strict TypeScript, ESLint, Prettier and Vitest",
+  "Real document and node model in @aiphotoshop/design-schema",
+  "Immutable structural operations in @aiphotoshop/design-engine",
+  "Stable opaque IDs that survive every structural edit and round-trip",
+  "Layers panel and inspector read the real document tree",
+  "Schema, hierarchy, operation and serialization tests",
 ] as const;
 
 const NOT_YET = [
-  "Layer engine and real document tree",
-  "Canvas rendering, selection and transforms",
+  "Canvas rendering and selection",
+  "Transforms, drag-and-drop and text layout",
   "Undo / redo and document persistence",
   "AI provider integration",
   "Supabase persistence",
@@ -122,7 +122,7 @@ export default function Home() {
               </div>
 
               <p className="mt-8 font-mono text-[10px] tracking-[0.16em] text-ink-faint">
-                FOUNDATION RELEASE · EDITOR SHELL IN MILESTONE 002
+                STRUCTURED DOCUMENTS · LAYER ENGINE IN MILESTONE 003
               </p>
             </div>
 
@@ -183,8 +183,8 @@ export default function Home() {
                   @aiphotoshop/web
                 </span>
                 <span className="text-[14px] leading-6 text-ink-muted">
-                  The Next.js product surface. The professional editor shell lives here from
-                  Milestone 002.
+                  The Next.js product surface. It composes the schema and engine into the
+                  professional editor shell.
                 </span>
               </li>
             </ul>
@@ -195,12 +195,13 @@ export default function Home() {
           <div className="mx-auto max-w-6xl px-6 py-20">
             <Eyebrow>Status</Eyebrow>
             <h2 className="mt-5 text-[28px] leading-tight font-semibold tracking-[-0.02em] text-ink sm:text-[34px]">
-              Milestone 002 — Editor shell
+              Milestone 003 — Layer engine
             </h2>
             <p className="mt-4 max-w-2xl text-[15px] leading-7 text-ink-muted">
-              The workspace now exists: a professional editor shell you can open and navigate. It is
-              structure only — layout and accessible regions — with no document mutation, rendering
-              engine, AI, persistence or export yet. Those arrive in their own milestones.
+              The document is now real: a normalized, serializable tree of typed nodes with stable
+              opaque ids, and a deterministic operation set that produces new revisions. The
+              editor&rsquo;s layers panel and inspector read it. Rendering, transforms, editing,
+              undo/redo, AI, persistence and export arrive in their own milestones.
             </p>
 
             <div className="mt-12 grid grid-cols-1 gap-10 border-t border-line pt-10 md:grid-cols-2">
@@ -234,7 +235,7 @@ export default function Home() {
             </div>
 
             <p className="mt-12 border-t border-line pt-6 font-mono text-[10px] tracking-[0.16em] text-ink-faint">
-              NEXT · MILESTONE 003 — LAYER ENGINE
+              NEXT · MILESTONE 004 — DESIGN DOCUMENT SYSTEM
             </p>
           </div>
         </section>

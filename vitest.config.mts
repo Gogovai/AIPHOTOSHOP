@@ -12,6 +12,14 @@ export default defineConfig({
     alias: {
       // Mirrors the `@/*` path mapping in apps/web/tsconfig.json.
       "@": fileURLToPath(new URL("./apps/web/src", import.meta.url)),
+      // Resolve workspace packages from source so tests never depend on a
+      // prior `dist` build (their package.json `exports` point at `dist`).
+      "@aiphotoshop/design-schema": fileURLToPath(
+        new URL("./packages/design-schema/src/index.ts", import.meta.url),
+      ),
+      "@aiphotoshop/design-engine": fileURLToPath(
+        new URL("./packages/design-engine/src/index.ts", import.meta.url),
+      ),
     },
   },
   test: {

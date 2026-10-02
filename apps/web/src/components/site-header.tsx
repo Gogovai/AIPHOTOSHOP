@@ -28,7 +28,7 @@ export function SiteHeader() {
         </nav>
 
         <span className="font-mono text-[10px] tracking-[0.16em] text-ink-faint">
-          MILESTONE 002
+          MILESTONE 003
         </span>
       </div>
     </header>

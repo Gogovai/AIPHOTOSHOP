@@ -8,13 +8,31 @@
  *
  * Responsibilities (see `docs/DESIGN_ENGINE.md`):
  *
- * - Apply operations such as create, transform, reorder, group, align, style.
- * - Validate operations against the schema before they are applied.
- * - Produce a new document revision rather than mutating state in place.
+ * - Apply structural operations: add, remove, rename, reparent, reorder,
+ *   group, ungroup, and set visibility/lock state.
+ * - Validate operations against the schema before applying them.
+ * - Return a new document rather than mutating the previous one.
  * - Contain no rendering, no persistence, and no AI provider specifics.
  *
- * Milestone 001 establishes this package boundary only. No operations are
- * published yet and nothing here should be treated as a stable API.
+ * The engine depends on `@aiphotoshop/design-schema` only. It never imports
+ * React or anything that knows an editor exists.
  */
 
-export {};
+export { DesignEngineError, type DesignEngineErrorCode } from "./errors";
+
+export {
+  addNode,
+  applyOperation,
+  groupNodes,
+  removeNode,
+  renameNode,
+  reorderNode,
+  reparentNode,
+  setLocked,
+  setVisibility,
+  ungroupNode,
+  type AddNodeOptions,
+  type DocumentOperation,
+  type GroupNodesOptions,
+  type ReparentNodeOptions,
+} from "./operations";

@@ -202,6 +202,12 @@ importers:
 
   apps/web:
     dependencies:
+      '@aiphotoshop/design-engine':
+        specifier: workspace:*
+        version: link:../../packages/design-engine
+      '@aiphotoshop/design-schema':
+        specifier: workspace:*
+        version: link:../../packages/design-schema
       next:
         specifier: 16.3.7
         version: 16.3.7(@babel/core@7.29.7(supports-color@7.2.0))(@types/node@26.6.3)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
@@ -256,6 +262,10 @@ importers:
         version: 6.0.3
 
   packages/design-engine:
+    dependencies:
+      '@aiphotoshop/design-schema':
+        specifier: workspace:*
+        version: link:../design-schema
     devDependencies:
       eslint:
         specifier: 9.39.5

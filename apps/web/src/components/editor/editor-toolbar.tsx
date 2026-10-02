@@ -11,15 +11,15 @@ import {
   TextIcon,
   ZoomIcon,
 } from "@/components/editor/editor-icons";
+import type { EditorTool } from "@/components/editor/editor-state";
 import { ToolButton } from "@/components/editor/tool-button";
 
 /**
  * The tools offered by the shell. Selection is real shell state (which button
  * is highlighted); the tools themselves do not yet do anything — tool behavior
- * begins with the design engine milestones. No callbacks exist yet, so none
- * are faked.
+ * begins with later milestones. No callbacks exist yet, so none are faked.
  */
-const TOOLS = [
+const TOOLS: readonly { id: EditorTool; label: string; Icon: typeof MoveIcon }[] = [
   { id: "move", label: "Move", Icon: MoveIcon },
   { id: "select", label: "Select", Icon: SelectIcon },
   { id: "frame", label: "Frame", Icon: FrameIcon },
@@ -29,9 +29,9 @@ const TOOLS = [
   { id: "image", label: "Image", Icon: ImageIcon },
   { id: "hand", label: "Hand", Icon: HandIcon },
   { id: "zoom", label: "Zoom", Icon: ZoomIcon },
-] as const;
+];
 
-export type ToolId = (typeof TOOLS)[number]["id"];
+export type ToolId = EditorTool;
 
 /**
  * Vertical tool rail. `"use client"` is limited to this island (plus its

@@ -1,18 +1,16 @@
+import type { DesignDocument, NodeType } from "@aiphotoshop/design-schema";
+
 import { EyeOffIcon, LockIcon } from "@/components/editor/editor-icons";
-import {
-  SHELL_LAYERS,
-  SHELL_SELECTED_LAYER_ID,
-  type ShellLayerKind,
-} from "@/components/editor/editor-types";
+import { isNodeSelected, type EditorState } from "@/components/editor/editor-state";
+import { flattenLayerTree } from "@/components/editor/layer-tree";
 
 /**
- * Structural layers panel. Rows come from local shell data (editor-types.ts),
- * not from `design-schema` — the real tree replaces that data in Milestone 003
- * without changing this panel's markup.
- *
- * Visibility, lock, and selection states are displayed; none is interactive.
+ * The layers panel, now driven by the real design document. Rows are a
+ * depth-first projection of the document tree; selection comes from editor
+ * state. Visibility, lock, and selection are displayed but not interactive —
+ * no layer operations or drag-and-drop are part of this milestone.
  */
-const KIND_LABEL: Record<ShellLayerKind, string> = {
+const KIND_LABEL: Record<NodeType, string> = {
   canvas: "CANVAS",
   group: "GROUP",
   image: "IMAGE",
@@ -21,7 +19,15 @@ const KIND_LABEL: Record<ShellLayerKind, string> = {
   svg: "SVG",
 };
 
-export function LayersPanel() {
+export function LayersPanel({
+  document: doc,
+  state,
+}: {
+  document: DesignDocument;
+  state: EditorState;
+}) {
+  const layers = flattenLayerTree(doc);
+
   return (
     <section aria-label="Layers" className="flex min-h-0 flex-col">
       <h2 className="border-b border-canvas-line px-3 py-2 font-mono text-[10px] tracking-[0.18em] text-canvas-muted">
@@ -29,8 +35,8 @@ export function LayersPanel() {
       </h2>
 
       <ul role="listbox" aria-label="Layers list" className="overflow-y-auto py-1">
-        {SHELL_LAYERS.map((layer) => {
-          const selected = layer.id === SHELL_SELECTED_LAYER_ID;
+        {layers.map((layer) => {
+          const selected = isNodeSelected(state, layer.id);
           return (
             <li
               key={layer.id}
@@ -48,7 +54,7 @@ export function LayersPanel() {
                   selected ? "text-accent" : "text-canvas-muted"
                 }`}
               >
-                {KIND_LABEL[layer.kind]}
+                {KIND_LABEL[layer.type]}
               </span>
 
               <span className={`truncate ${layer.visible ? "" : "opacity-50"}`}>{layer.name}</span>

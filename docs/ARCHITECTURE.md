@@ -62,8 +62,11 @@ Rules:
 - `ui` depends on nothing domain-specific.
 - `apps/web` composes everything.
 
-At Milestone 001 these packages are boundaries only; no dependency between them
-has been introduced yet.
+As of Milestone 003 the first two links are real: `design-schema` publishes the
+document and node model, `design-engine` depends on it, and `apps/web` imports
+both to render the editor's layers panel and inspector from a real document.
+`ai-core`, `typography-engine`, `color-engine`, and `export-engine` remain
+boundaries only.
 
 ## Initial architecture (what exists today)
 
@@ -84,15 +87,19 @@ and source maps. The web app is built by Next.js.
 
 ### Editor application
 
-`apps/web` gains an editor shell: a canvas renderer, a layers panel, a
-properties inspector, a toolbar, and an AI interaction surface. The renderer
-reads the document and draws it; it never becomes the document.
+`apps/web` hosts the editor shell: top bar, tool rail, canvas viewport, layers
+panel, inspector, and status bar. The layers panel and inspector now read a real
+`DesignDocument`; selection and viewport live in a separate `EditorState` and are
+never written into the document. A canvas _renderer_ is still planned — the
+viewport currently shows an honest empty state.
 
 ### Design document system
 
-`design-schema` publishes the real document model. `design-engine` publishes the
-operation set. Together they provide create, transform, reorder, group, align,
-and style operations that always produce a new document revision.
+`design-schema` publishes the real document and node model (canvas, group, image,
+text, shape, svg) with stable opaque ids and lossless JSON serialization.
+`design-engine` publishes the structural operation set (add, remove, rename,
+reparent, reorder, group, ungroup, set visibility/lock) that always returns a new
+document. Transform, style, and text operations are planned.
 
 ### AI system
 
@@ -128,11 +135,11 @@ renderer is driven by a time value. Motion is not a separate document format.
 - **Testing.** Domain logic (schema, engine, typography, color) is pure and
   therefore unit-testable without a browser.
 
-## Deliberate constraints at Milestone 001
+## Deliberate constraints at Milestone 003
 
-- No rendering library is installed.
-- No AI provider is integrated.
-- No Supabase project is connected.
-- No editor code exists.
+- No rendering library is installed; the canvas does not yet draw the document.
+- No AI provider is integrated; `ai-core` is still a boundary.
+- No Supabase project is connected; the editor uses an in-memory demo document.
+- No undo/redo, persistence, transforms, or export.
 
 These are staged, not forgotten. See `docs/DEVELOPMENT_ROADMAP.md`.

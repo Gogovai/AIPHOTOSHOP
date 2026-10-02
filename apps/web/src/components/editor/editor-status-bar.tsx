@@ -1,26 +1,37 @@
-import { DOCUMENT_NAME, DOCUMENT_SIZE } from "@/components/editor/editor-types";
+import type { DesignDocument } from "@aiphotoshop/design-schema";
+
+import { zoomPercent, type EditorState } from "@/components/editor/editor-state";
 
 /**
- * Thin bottom bar: document name, artboard size, and zoom display. The zoom
- * stepper is shell UI only — no zoom state exists in this milestone, so the
- * buttons change nothing and are labelled as such via title text.
+ * Thin bottom bar: document name, artboard size, and viewport zoom. Values come
+ * from the real document and editor state. The zoom stepper is still display
+ * only — no zoom operation exists in this milestone, so the buttons are
+ * labelled accordingly and change nothing.
  */
-export function EditorStatusBar() {
+export function EditorStatusBar({
+  document: doc,
+  state,
+}: {
+  document: DesignDocument;
+  state: EditorState;
+}) {
+  const percent = zoomPercent(state);
+
   return (
     <footer
       aria-label="Status bar"
       className="hidden h-7 shrink-0 items-center gap-3 border-t border-canvas-line bg-canvas px-3 font-mono text-[10px] tracking-[0.12em] text-canvas-muted min-[900px]:flex"
     >
-      <span className="truncate">{DOCUMENT_NAME}</span>
+      <span className="truncate">{doc.name}</span>
 
       <span aria-hidden className="h-3 w-px bg-canvas-line" />
 
       <span>
-        {DOCUMENT_SIZE.width} × {DOCUMENT_SIZE.height}
+        {doc.canvas.width} × {doc.canvas.height}
       </span>
 
       <span className="ml-auto flex items-center gap-2">
-        <span aria-label="Status: design document shell" className="text-canvas-ink">
+        <span aria-label="Status: design document" className="text-canvas-ink">
           Design document
         </span>
         <span aria-hidden className="h-3 w-px bg-canvas-line" />
@@ -32,8 +43,8 @@ export function EditorStatusBar() {
         >
           −
         </button>
-        <span aria-label="Current zoom: 100 percent" className="text-canvas-ink">
-          100%
+        <span aria-label={`Current zoom: ${percent} percent`} className="text-canvas-ink">
+          {percent}%
         </span>
         <button
           type="button"

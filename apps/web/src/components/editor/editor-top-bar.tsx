@@ -1,14 +1,18 @@
 import Link from "next/link";
 
-import { DOCUMENT_NAME } from "@/components/editor/editor-types";
-
 /**
  * Compact professional application header. The center is deliberately a
  * restrained workspace label, not fake editing controls. Right-side controls
  * are shell buttons with honest labels: no share, export, or account backend
  * exists yet, so none is implied as working.
  */
-export function EditorTopBar({ projectId }: { projectId: string }) {
+export function EditorTopBar({
+  projectId,
+  documentName,
+}: {
+  projectId: string;
+  documentName: string;
+}) {
   return (
     <header className="flex h-11 shrink-0 items-center gap-4 border-b border-canvas-line bg-canvas px-3">
       <div className="flex min-w-0 items-center gap-3">
@@ -21,7 +25,7 @@ export function EditorTopBar({ projectId }: { projectId: string }) {
 
         <span aria-hidden className="h-4 w-px shrink-0 bg-canvas-line" />
 
-        <span className="truncate text-[12px] text-canvas-muted">{DOCUMENT_NAME}</span>
+        <span className="truncate text-[12px] text-canvas-muted">{documentName}</span>
         <span
           className="shrink-0 font-mono text-[10px] tracking-[0.14em] text-canvas-muted"
           title={`Project: ${projectId}`}

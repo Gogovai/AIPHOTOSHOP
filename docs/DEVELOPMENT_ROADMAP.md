@@ -55,7 +55,7 @@ provably independent of document state.
 
 ---
 
-## Milestone 003 — Layer engine
+## Milestone 003 — Layer engine ✅
 
 **Goal:** a real layer tree that can be created, inspected, and reordered.
 
@@ -67,8 +67,29 @@ provably independent of document state.
 - Stable IDs and serialization round-trips.
 - The layers panel renders the actual tree.
 
+**Delivered**
+
+- `@aiphotoshop/design-schema`: normalized `DesignDocument` (`rootNodeId` plus a
+  node map), a discriminated-union node model (`canvas`, `group`, `image`,
+  `text`, `shape`, `svg`), centralized opaque ids, `createDocument`, structural
+  `validateDocument`/`assertValidDocument` with diagnostic errors, and lossless
+  `serializeDocument`/`deserializeDocument`.
+- `@aiphotoshop/design-engine`: immutable `addNode`, `removeNode` (subtree),
+  `renameNode`, `reparentNode`, `reorderNode`, `groupNodes`, `ungroupNode`,
+  `setVisibility`, `setLocked`, plus the typed `DocumentOperation` union and
+  `applyOperation` dispatcher. Failures throw a coded `DesignEngineError`.
+- Ids survive rename, reorder, reparent, group, ungroup, and serialization.
+- The editor's layers panel and inspector read a real in-memory demo document;
+  selection lives in a separate `EditorState`, never in the document.
+- Schema, hierarchy/invariant, operation, id-stability, and round-trip tests.
+
+**Not yet implemented (by design)**
+
+- Canvas rendering, transforms, drag-and-drop, text layout, undo/redo,
+  persistence, AI, and export.
+
 **Done when:** a document round-trips through serialization with identical IDs,
-and every invariant in `docs/LAYER_SYSTEM.md` is covered by tests.
+and every invariant in `docs/LAYER_SYSTEM.md` is covered by tests. ✅
 
 ---
 

@@ -4,9 +4,9 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { EditorShell } from "@/components/editor/editor-shell";
 
 /**
- * Milestone 002 shell checks: the editor renders its major regions. Structural
- * smoke tests only — behavior tests arrive with real editor state. Rendered
- * with `react-dom/server` so no browser/test-DOM infrastructure is needed.
+ * Editor shell checks: the editor renders its major regions and now shows real
+ * design-document data. Rendered with `react-dom/server` so no browser/test-DOM
+ * infrastructure is needed.
  */
 function renderShell(): string {
   return renderToStaticMarkup(<EditorShell projectId="demo" />);
@@ -32,32 +32,54 @@ describe("EditorShell", () => {
     expect(html).toContain("WORKSPACE · DEMO");
   });
 
-  it("renders the artboard shell in the canvas viewport", () => {
+  it("renders the artboard with the real canvas proportions", () => {
     const html = renderShell();
 
     expect(html).toContain('data-testid="artboard"');
     expect(html).toContain("Your canvas");
-    expect(html).toContain("The structured design engine will appear here.");
+    expect(html).toContain("Canvas rendering arrives in a later milestone.");
+    expect(html).toContain("width:270px");
+    expect(html).toContain("height:337.5px");
   });
 
-  it("renders placeholder rows in the layers panel with state icons", () => {
+  it("renders the real document tree in the layers panel", () => {
     const html = renderShell();
 
     expect(html).toContain("LAYERS");
-    expect(html).toContain("Canvas");
-    expect(html).toContain("Headline");
-    expect(html).toContain("TEXT");
-    expect(html).toContain('data-testid="layer-hidden"');
-    expect(html).toContain('data-testid="layer-locked"');
+    for (const name of ["Canvas", "Background", "Hero Image", "Headline", "Subtitle", "Rule"]) {
+      expect(html).toContain(name);
+    }
+    expect(html).toContain("CANVAS");
+    expect(html).toContain("IMAGE");
+    expect(html).toContain("SHAPE");
   });
 
-  it("shows em-dash values in the inspector (no fake document data)", () => {
+  it("shows document visibility and lock state in the layers panel", () => {
+    const html = renderShell();
+
+    expect(html).toContain('data-testid="layer-hidden"');
+    expect(html).toContain('data-testid="layer-locked"');
+    expect(html).toContain("Subtitle hidden");
+    expect(html).toContain("Rule locked");
+  });
+
+  it("marks the selected node from editor state", () => {
+    const html = renderShell();
+
+    expect(html).toContain('aria-selected="true"');
+    expect(html).toContain("Headline");
+  });
+
+  it("reads the selected node's real data in the inspector", () => {
     const html = renderShell();
 
     expect(html).toContain("INSPECTOR");
-    expect(html).toContain("POSITION");
-    expect(html).toContain("APPEARANCE");
-    expect(html).toContain("TYPOGRAPHY");
+    expect(html).toContain("Name");
+    expect(html).toContain("Visibility");
+    expect(html).toContain("Locked");
+    expect(html).toContain("Visible");
+    expect(html).toContain("Unlocked");
+    expect(html).toContain("DOCUMENT");
     expect(html).toContain("<dd");
   });
 
@@ -82,6 +104,7 @@ describe("EditorShell", () => {
   it("renders document size and zoom display in the status bar", () => {
     const html = renderShell();
 
+    expect(html).toContain("Untitled Design");
     expect(html).toContain("1080 × 1350");
     expect(html).toContain("100%");
     expect(html).toContain("Design document");

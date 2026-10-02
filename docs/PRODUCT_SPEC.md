@@ -103,10 +103,14 @@ eventually motion. This is not a toy generator.
 
 ## Current state
 
-This repository is at **Milestone 002 — Editor shell**. The monorepo, package
+This repository is at **Milestone 003 — Layer engine**. The monorepo, package
 boundaries, tooling, and product surface from Milestone 001 are in place, and
-the professional editor shell now exists at `/editor/[projectId]`: top
-application bar, tool rail, canvas viewport with an example artboard, layers
-panel, inspector, and status bar. It is a shell only — real document state,
-layers, rendering, selection, editing, undo/redo, AI, persistence, and export
-are intentionally not implemented yet. See `docs/DEVELOPMENT_ROADMAP.md`.
+the editor shell at `/editor/[projectId]` now renders a **real structured
+document**: `@aiphotoshop/design-schema` provides the normalized document and
+node model with stable opaque ids and lossless JSON serialization, and
+`@aiphotoshop/design-engine` provides the immutable structural operations. The
+layers panel and inspector read that document (an in-memory demo document,
+since persistence is not implemented), and editor selection is kept separate
+from document state. Still not implemented: canvas rendering, transforms,
+editing interactions, undo/redo, AI, persistence, and export. See
+`docs/DEVELOPMENT_ROADMAP.md`.

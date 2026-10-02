@@ -33,18 +33,23 @@ Read the full product specification in [`docs/PRODUCT_SPEC.md`](docs/PRODUCT_SPE
 
 ## Current milestone
 
-**Milestone 001 — Project foundation.** Complete.
+**Milestone 003 — Layer engine.** Complete.
 
-This repository currently contains the foundation and nothing beyond it:
+This repository currently contains the foundation, the professional editor
+shell, and the real structured layer engine:
 
 - the pnpm + Turborepo monorepo and its package boundaries;
 - strict TypeScript, ESLint, Prettier, and a Vitest harness;
-- a minimal professional product surface;
+- the editor shell at `/editor/[projectId]`;
+- `@aiphotoshop/design-schema`: the normalized, serializable document and node
+  model with stable opaque ids;
+- `@aiphotoshop/design-engine`: deterministic structural operations that return
+  a new document;
 - the product, architecture, and layer-system documentation.
 
-The editor, the layer engine, the design document system, and the AI systems are
-**deliberately not implemented yet**. There is no fake AI and no fake editor.
-See [`docs/DEVELOPMENT_ROADMAP.md`](docs/DEVELOPMENT_ROADMAP.md).
+Canvas rendering, transforms, editing interactions, undo/redo, persistence, AI,
+and export are **deliberately not implemented yet**. There is no fake AI and no
+fake editor. See [`docs/DEVELOPMENT_ROADMAP.md`](docs/DEVELOPMENT_ROADMAP.md).
 
 ## Technology stack
 
@@ -128,7 +133,7 @@ Full detail in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 | [`docs/DESIGN_ENGINE.md`](docs/DESIGN_ENGINE.md)             | The operation model                       |
 | [`docs/LAYER_SYSTEM.md`](docs/LAYER_SYSTEM.md)               | Layer tree, identity, and invariants      |
 | [`docs/AI_SYSTEM.md`](docs/AI_SYSTEM.md)                     | AI boundaries and state separation        |
-| [`docs/DEVELOPMENT_ROADMAP.md`](docs/DEVELOPMENT_ROADMAP.md) | The fifteen milestones                    |
+| [`docs/DEVELOPMENT_ROADMAP.md`](docs/DEVELOPMENT_ROADMAP.md) | The milestones and their current status   |
 | [`docs/AGENT_RULES.md`](docs/AGENT_RULES.md)                 | Binding rules for contributors and agents |
 
 ## Development rules

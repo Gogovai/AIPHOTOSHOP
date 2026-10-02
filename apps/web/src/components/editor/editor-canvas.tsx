@@ -1,14 +1,13 @@
-import { DOCUMENT_SIZE } from "@/components/editor/editor-types";
+import type { DesignDocument } from "@aiphotoshop/design-schema";
 
 /**
- * The canvas viewport: a dark neutral workspace around a centered white
- * artboard with realistic document proportions (1080 × 1350).
+ * The canvas viewport: a dark neutral workspace around a centered artboard
+ * whose proportions come from the real document canvas.
  *
- * This is the visual shell only — no rendering engine, no layers, no editable
- * objects (those begin in Milestone 003). The artboard carries an honest empty
- * state. Rulers are drawn as purely decorative hairlines.
+ * Rendering is still a later milestone, so the artboard carries an honest empty
+ * state rather than drawing the document tree. Rulers are decorative hairlines.
  */
-export function EditorCanvas() {
+export function EditorCanvas({ document: doc }: { document: DesignDocument }) {
   return (
     <section
       aria-label="Canvas viewport"
@@ -28,11 +27,11 @@ export function EditorCanvas() {
         <div
           data-testid="artboard"
           className="flex flex-col items-center justify-center border border-canvas-line bg-white shadow-artboard"
-          style={{ width: DOCUMENT_SIZE.width / 4, height: DOCUMENT_SIZE.height / 4 }}
+          style={{ width: doc.canvas.width / 4, height: doc.canvas.height / 4 }}
         >
           <p className="text-[13px] font-medium text-ink">Your canvas</p>
           <p className="mt-1.5 text-[11px] text-ink-faint">
-            The structured design engine will appear here.
+            Canvas rendering arrives in a later milestone.
           </p>
         </div>
       </div>
