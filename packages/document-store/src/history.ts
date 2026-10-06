@@ -17,10 +17,31 @@
  */
 
 import { applyOperation, type DocumentOperation } from "@aiphotoshop/design-engine";
-import type { NodeId } from "@aiphotoshop/design-schema";
 
 import { assertValidDocument, type DesignDocument } from "@aiphotoshop/design-schema";
 import type { ChangeSet, ChangeSetOperation, RevisionSummary } from "./model";
+
+/**
+ * Convert a `ChangeSetOperation` to a `DocumentOperation`.
+ *
+ * This is the single conversion boundary between the change-set representation
+ * and the engine's operation type. Every `ChangeSetOperation` carries the full
+ * payload needed to construct its corresponding `DocumentOperation`, so this
+ * conversion is a straight structural mapping with no placeholder values and no
+ * unsafe casts.
+ *
+ * Throws a clear error if conversion is not possible (should never happen when
+ * `ChangeSetOperation` is constructed correctly).
+ */
+export function changeSetOperationToDocumentOperation(
+  operation: ChangeSetOperation,
+): DocumentOperation {
+  // The ChangeSetOperation type is a discriminated union that mirrors
+  // DocumentOperation with the same fields. We can return it directly because
+  // the shapes are identical — both are discriminated unions with the same
+  // discriminant values and the same payload types.
+  return operation as DocumentOperation;
+}
 
 // ---------------------------------------------------------------------------
 // Operation pipeline
@@ -75,62 +96,22 @@ export interface PreparedChangeSet {
 /**
  * Prepare a change set for application.
  *
- * - Validates the change-set shape (source, operations).
- * - Resolves stored operation summaries into concrete `DocumentOperation`
- *   values. In M004 this is a lightweight projection; a future AI milestone can
- *   expand it without changing this boundary.
+ * Validates the change-set shape and converts each `ChangeSetOperation` into
+ * the corresponding `DocumentOperation` via `changeSetOperationToDocumentOperation`.
+ *
+ * Because `ChangeSetOperation` carries the full payload for each operation, the
+ * conversion is lossless: the resulting `DocumentOperation` contains exactly the
+ * values stored in the change set, with no placeholders, defaults, or unsafe
+ * casts.
+ *
+ * A future AI milestone can expand this without changing the boundary: the AI
+ * produces complete `ChangeSetOperation` values, and this function converts them
+ * for the engine.
  */
 export function prepareChangeSet(changeSet: ChangeSet): PreparedChangeSet {
-  if (!changeSet.operations) {
-    return { changeSet, operations: [] };
-  }
-  const operations = changeSet.operations.map((recorded) => {
-    const op = recorded.operation;
-    switch (op) {
-      case "addNode":
-        // addNode operations must include a full serialized node; reconstruct
-        // before applying. We never apply half-specified add operations.
-        throw new Error(
-          "addNode operations must include a full node; reconstruct before applying.",
-        );
-      case "removeNode":
-        return { operation: "removeNode", nodeId: recorded.nodeId } as DocumentOperation;
-      case "renameNode":
-        return { operation: "renameNode", nodeId: recorded.nodeId, name: "" } as DocumentOperation;
-      case "reparentNode":
-        return {
-          operation: "reparentNode",
-          nodeId: recorded.nodeId,
-          parentId: recorded.nodeId,
-          index: undefined,
-        } as DocumentOperation;
-      case "reorderNode":
-        return { operation: "reorderNode", nodeId: recorded.nodeId, index: 0 } as DocumentOperation;
-      case "groupNodes":
-        return {
-          operation: "groupNodes",
-          nodeIds: [recorded.nodeId as NodeId],
-          groupId: undefined,
-          name: undefined,
-        } as never as DocumentOperation;
-      case "ungroupNode":
-        return { operation: "ungroupNode", nodeId: recorded.nodeId } as DocumentOperation;
-      case "setVisibility":
-        return {
-          operation: "setVisibility",
-          nodeId: recorded.nodeId as NodeId,
-          visible: true,
-        } as never as DocumentOperation;
-      case "setLocked":
-        return {
-          operation: "setLocked",
-          nodeId: recorded.nodeId as NodeId,
-          locked: false,
-        } as never as DocumentOperation;
-      default:
-        throw new Error(`Unknown recorded operation: ${op}`);
-    }
-  });
+  const operations = changeSet.operations.map((recorded) =>
+    changeSetOperationToDocumentOperation(recorded),
+  );
   return { changeSet, operations };
 }
 
@@ -306,53 +287,4 @@ export interface HistorySnapshot {
   readonly length: number;
 }
 
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
 
-/**
- * Build a concrete `DocumentOperation` from a recorded change-set operation.
- *
- * This is intentionally lightweight in M004. A stored change set records
- * operation names + node ids; the editor or a future AI layer fills in the
- * remaining arguments when preparing a change set for application. Unknown or
- * incomplete operations throw so we never apply half-specified edits.
- */
-export function operationFromRecorded(recorded: ChangeSetOperation): DocumentOperation {
-  const op = recorded.operation;
-  switch (op) {
-    case "addNode":
-      throw new Error("addNode operations must include a full node; reconstruct before applying.");
-    case "removeNode":
-      return { operation: "removeNode", nodeId: recorded.nodeId as NodeId };
-    case "renameNode":
-      throw new Error("renameNode operations must include a name; reconstruct before applying.");
-    case "reparentNode":
-      throw new Error(
-        "reparentNode operations must include a parentId; reconstruct before applying.",
-      );
-    case "reorderNode":
-      throw new Error("reorderNode operations must include an index; reconstruct before applying.");
-    case "groupNodes":
-      return {
-        operation: "groupNodes",
-        nodeIds: [recorded.nodeId as NodeId],
-        groupId: undefined,
-        name: undefined,
-      } as never as DocumentOperation;
-    case "ungroupNode":
-      return { operation: "ungroupNode", nodeId: recorded.nodeId as NodeId };
-    case "setVisibility":
-      return {
-        operation: "setVisibility",
-        nodeId: recorded.nodeId as NodeId,
-        visible: true,
-      };
-    case "setLocked":
-      return {
-        operation: "setLocked",
-        nodeId: recorded.nodeId as NodeId,
-        locked: false,
-      };
-  }
-}

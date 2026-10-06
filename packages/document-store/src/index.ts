@@ -59,6 +59,7 @@ export { InMemoryDocumentRepository } from "./repository";
 export {
   applyChangeSet,
   applyOperationWithRecord,
+  changeSetOperationToDocumentOperation,
   createHistory,
   prepareChangeSet,
   previewChangeSet,

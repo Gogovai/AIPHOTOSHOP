@@ -240,19 +240,19 @@ class SupabaseDocumentRepository implements DocumentRepository {
     return new DocumentPersistenceError(`Document write failed: ${message}`);
   }
 
-  private buildChangeSet(
-    operations: readonly string[],
-    description: string | null,
-  ): ChangeSet | null {
-    if (operations.length === 0) return null;
+  /**
+   * Build a ChangeSet from a RevisionSummary for storage.
+   *
+   * Stores lightweight metadata only; not executable. For executable
+   * ChangeSets, the caller should provide complete ChangeSetOperation values.
+   */
+  private buildChangeSet(summary: RevisionSummary | undefined): ChangeSet | null {
+    if (!summary || summary.operationCount === 0) return null;
     return {
-      id: `cs-${description ?? "edit"}`,
-      source: "user",
-      operations: operations.map((name) => ({
-        operation: name as ChangeSet["operations"][number]["operation"],
-        nodeId: "root",
-      })),
-      description: description ?? undefined,
+      id: `cs-${summary.description ?? "edit"}`,
+      source: summary.source,
+      operations: [],
+      description: summary.description ?? undefined,
     };
   }
 }

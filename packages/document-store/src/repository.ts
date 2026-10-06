@@ -161,10 +161,7 @@ export class InMemoryDocumentRepository implements DocumentRepository {
       document: serialized,
       createdAt: new Date().toISOString(),
       parentRevisionId: state.currentRevisionId,
-      changeSet: this.buildChangeSet(
-        input.summary?.operations ?? [],
-        input.summary?.description ?? null,
-      ),
+      changeSet: this.buildChangeSetFromSummary(input.summary),
     };
 
     state.currentRevisionId = revisionId;
@@ -213,7 +210,7 @@ export class InMemoryDocumentRepository implements DocumentRepository {
       document: serialized,
       createdAt: new Date().toISOString(),
       parentRevisionId: state.currentRevisionId,
-      changeSet: this.buildChangeSet(summary.operations ?? [], summary.description ?? "restore"),
+      changeSet: this.buildChangeSetFromSummary(summary),
     };
 
     state.currentRevisionId = restoredRevisionId;
@@ -279,8 +276,14 @@ export class InMemoryDocumentRepository implements DocumentRepository {
     };
   }
 
-  private buildChangeSet(
-    operations: readonly string[],
+  /**
+   * Build a ChangeSet from complete operation payloads.
+   *
+   * This is used when the caller provides full operation data (e.g., from the
+   * editor's local undo stack). The resulting ChangeSet is executable.
+   */
+  private buildChangeSetFromOperations(
+    operations: readonly ChangeSetOperation[],
     description: string | null,
   ): ChangeSet | null {
     if (operations.length === 0) {
@@ -289,11 +292,33 @@ export class InMemoryDocumentRepository implements DocumentRepository {
     return {
       id: `cs-${description ?? "edit"}`,
       source: "user",
-      operations: operations.map((name) => ({
-        operation: name as ChangeSetOperation["operation"],
-        nodeId: "root",
-      })),
+      operations,
       description: description ?? undefined,
+    };
+  }
+
+  /**
+   * Build a ChangeSet from a lightweight RevisionSummary.
+   *
+   * This stores operation names only (not full payloads) because the summary
+   * is metadata, not executable. The resulting ChangeSet has empty operations
+   * and is suitable for storage when we only have audit metadata.
+   *
+   * For executable ChangeSets, use buildChangeSetFromOperations.
+   */
+  private buildChangeSetFromSummary(
+    summary: RevisionSummary | undefined,
+  ): ChangeSet | null {
+    if (!summary || summary.operationCount === 0) {
+      return null;
+    }
+    // Store as a ChangeSet with the summary's metadata but no executable ops.
+    // The operations array is empty because the summary only contains names.
+    return {
+      id: `cs-${summary.description ?? "edit"}`,
+      source: summary.source,
+      operations: [],
+      description: summary.description ?? undefined,
     };
   }
 
