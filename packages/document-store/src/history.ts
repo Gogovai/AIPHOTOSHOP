@@ -36,11 +36,66 @@ import type { ChangeSet, ChangeSetOperation, RevisionSummary } from "./model";
 export function changeSetOperationToDocumentOperation(
   operation: ChangeSetOperation,
 ): DocumentOperation {
-  // The ChangeSetOperation type is a discriminated union that mirrors
-  // DocumentOperation with the same fields. We can return it directly because
-  // the shapes are identical — both are discriminated unions with the same
-  // discriminant values and the same payload types.
-  return operation as DocumentOperation;
+  switch (operation.operation) {
+    case "addNode":
+      return {
+        operation: "addNode",
+        node: operation.node,
+        index: operation.index,
+      };
+    case "removeNode":
+      return {
+        operation: "removeNode",
+        nodeId: operation.nodeId,
+      };
+    case "renameNode":
+      return {
+        operation: "renameNode",
+        nodeId: operation.nodeId,
+        name: operation.name,
+      };
+    case "reparentNode":
+      return {
+        operation: "reparentNode",
+        nodeId: operation.nodeId,
+        parentId: operation.parentId,
+        index: operation.index,
+      };
+    case "reorderNode":
+      return {
+        operation: "reorderNode",
+        nodeId: operation.nodeId,
+        index: operation.index,
+      };
+    case "groupNodes":
+      return {
+        operation: "groupNodes",
+        nodeIds: operation.nodeIds,
+        groupId: operation.groupId,
+        name: operation.name,
+      };
+    case "ungroupNode":
+      return {
+        operation: "ungroupNode",
+        nodeId: operation.nodeId,
+      };
+    case "setVisibility":
+      return {
+        operation: "setVisibility",
+        nodeId: operation.nodeId,
+        visible: operation.visible,
+      };
+    case "setLocked":
+      return {
+        operation: "setLocked",
+        nodeId: operation.nodeId,
+        locked: operation.locked,
+      };
+    default: {
+      const _exhaustive: never = operation;
+      throw new Error(`Unknown ChangeSetOperation: ${_exhaustive}`);
+    }
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -286,5 +341,3 @@ export interface HistorySnapshot {
   readonly canRedo: boolean;
   readonly length: number;
 }
-
-

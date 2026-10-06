@@ -113,9 +113,7 @@ class SupabaseDocumentRepository implements DocumentRepository {
       p_document: documentAsDbValue(input.document),
       p_name: input.document.name,
       p_expected_current_revision_id: input.expectedCurrentRevisionId,
-      p_change_summary: changeSetAsDbValue(
-        this.buildChangeSet(input.summary?.operations ?? [], input.summary?.description ?? null),
-      ),
+      p_change_summary: changeSetAsDbValue(this.buildChangeSet(input.summary)),
     });
     if (error) throw this.mapWriteError(error, input.document.id, input.expectedCurrentRevisionId);
 
@@ -182,9 +180,7 @@ class SupabaseDocumentRepository implements DocumentRepository {
       p_document: documentAsDbValue(document),
       p_name: document.name,
       p_expected_current_revision_id: null,
-      p_change_summary: changeSetAsDbValue(
-        this.buildChangeSet(summary.operations ?? [], summary.description ?? "restore"),
-      ),
+      p_change_summary: changeSetAsDbValue(this.buildChangeSet(summary)),
     });
     if (error) throw this.mapWriteError(error, projectId, null);
 

@@ -17,7 +17,12 @@
  *   but it is NOT executable by itself.
  */
 
-import type { DesignDocument, DesignNode, DocumentMetadata, NodeId } from "@aiphotoshop/design-schema";
+import type {
+  DesignDocument,
+  DesignNode,
+  DocumentMetadata,
+  NodeId,
+} from "@aiphotoshop/design-schema";
 
 export type DocumentOperationOperation =
   | "addNode"

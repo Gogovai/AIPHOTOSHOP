@@ -16,6 +16,7 @@ import {
   previewChangeSet,
   summaryFromChangeSet,
   type PreparedChangeSet,
+  type ChangeSetOperation,
 } from "./index";
 
 const ROOT = asNodeId("root");
@@ -34,14 +35,44 @@ function baseDoc(): DesignDocument {
 
 /** A prepared change set built from concrete engine operations. */
 function concreteChangeSet(operations: readonly DocumentOperation[]): PreparedChangeSet {
+  const changeSetOps = operations.map((operation): ChangeSetOperation => {
+    switch (operation.operation) {
+      case "addNode":
+        return { operation: "addNode", node: operation.node, index: operation.index };
+      case "removeNode":
+        return { operation: "removeNode", nodeId: operation.nodeId };
+      case "renameNode":
+        return { operation: "renameNode", nodeId: operation.nodeId, name: operation.name };
+      case "reparentNode":
+        return {
+          operation: "reparentNode",
+          nodeId: operation.nodeId,
+          parentId: operation.parentId,
+          index: operation.index,
+        };
+      case "reorderNode":
+        return { operation: "reorderNode", nodeId: operation.nodeId, index: operation.index };
+      case "groupNodes":
+        return {
+          operation: "groupNodes",
+          nodeIds: operation.nodeIds,
+          groupId: operation.groupId,
+          name: operation.name,
+        };
+      case "ungroupNode":
+        return { operation: "ungroupNode", nodeId: operation.nodeId };
+      case "setVisibility":
+        return { operation: "setVisibility", nodeId: operation.nodeId, visible: operation.visible };
+      case "setLocked":
+        return { operation: "setLocked", nodeId: operation.nodeId, locked: operation.locked };
+    }
+  });
+
   return {
     changeSet: {
       id: `cs-${operations.length}`,
       source: "user",
-      operations: operations.map((operation) => ({
-        operation: operation.operation,
-        nodeId: "text",
-      })),
+      operations: changeSetOps,
     },
     operations,
   };
@@ -178,7 +209,7 @@ describe("History", () => {
     const lock = prepareChangeSet({
       id: "cs-lock",
       source: "user",
-      operations: [{ operation: "setLocked", nodeId: TEXT }],
+      operations: [{ operation: "setLocked", nodeId: TEXT, locked: true }],
     });
 
     history.apply(remove);
@@ -186,7 +217,7 @@ describe("History", () => {
     history.apply(lock);
 
     expect(history.canRedo).toBe(false);
-    expect(history.currentDocument?.nodes[TEXT]?.locked).toBe(false);
+    expect(history.currentDocument?.nodes[TEXT]?.locked).toBe(true);
     expect(history.snapshot().length).toBe(1);
   });
 

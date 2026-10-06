@@ -27,7 +27,6 @@ import {
 import type { Revision } from "./model";
 import type {
   ChangeSet,
-  ChangeSetOperation,
   CreateDocumentInput,
   ListRevisionsResult,
   RevisionSummary,
@@ -277,38 +276,13 @@ export class InMemoryDocumentRepository implements DocumentRepository {
   }
 
   /**
-   * Build a ChangeSet from complete operation payloads.
-   *
-   * This is used when the caller provides full operation data (e.g., from the
-   * editor's local undo stack). The resulting ChangeSet is executable.
-   */
-  private buildChangeSetFromOperations(
-    operations: readonly ChangeSetOperation[],
-    description: string | null,
-  ): ChangeSet | null {
-    if (operations.length === 0) {
-      return null;
-    }
-    return {
-      id: `cs-${description ?? "edit"}`,
-      source: "user",
-      operations,
-      description: description ?? undefined,
-    };
-  }
-
-  /**
    * Build a ChangeSet from a lightweight RevisionSummary.
    *
    * This stores operation names only (not full payloads) because the summary
    * is metadata, not executable. The resulting ChangeSet has empty operations
    * and is suitable for storage when we only have audit metadata.
-   *
-   * For executable ChangeSets, use buildChangeSetFromOperations.
    */
-  private buildChangeSetFromSummary(
-    summary: RevisionSummary | undefined,
-  ): ChangeSet | null {
+  private buildChangeSetFromSummary(summary: RevisionSummary | undefined): ChangeSet | null {
     if (!summary || summary.operationCount === 0) {
       return null;
     }
