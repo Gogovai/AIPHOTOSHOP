@@ -11,6 +11,7 @@
     "lint": "eslint ."
   },
   "dependencies": {
+    "@aiphotoshop/document-store": "workspace:*",
     "@aiphotoshop/design-engine": "workspace:*",
     "@aiphotoshop/design-schema": "workspace:*",
     "next": "16.3.7",

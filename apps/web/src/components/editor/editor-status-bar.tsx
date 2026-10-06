@@ -27,7 +27,7 @@ export function EditorStatusBar({
       <span aria-hidden className="h-3 w-px bg-canvas-line" />
 
       <span>
-        {doc.canvas.width} × {doc.canvas.height}
+        {doc.canvas?.width ?? 0} × {doc.canvas?.height ?? 0}
       </span>
 
       <span className="ml-auto flex items-center gap-2">

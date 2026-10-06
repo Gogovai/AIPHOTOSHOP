@@ -17,7 +17,7 @@ export function InspectorPanel({
   state: EditorState;
 }) {
   const selectedId = state.selectedNodeIds[0];
-  const node = selectedId === undefined ? undefined : doc.nodes[selectedId];
+  const node = selectedId === undefined ? undefined : (doc.nodes?.[selectedId] ?? undefined);
 
   return (
     <section aria-label="Inspector" className="flex min-h-0 flex-col overflow-y-auto">
@@ -47,8 +47,11 @@ export function InspectorPanel({
         <div>
           <p className="font-mono text-[9px] tracking-[0.18em] text-canvas-muted">DOCUMENT</p>
           <dl className="mt-1.5 grid grid-cols-2 gap-x-2 gap-y-1.5">
-            <Field label="Nodes" value={String(Object.keys(doc.nodes).length)} />
-            <Field label="Canvas" value={`${doc.canvas.width} × ${doc.canvas.height}`} />
+            <Field label="Nodes" value={String(Object.keys(doc.nodes ?? {}).length)} />
+            <Field
+              label="Canvas"
+              value={`${doc.canvas?.width ?? 0} × ${doc.canvas?.height ?? 0}`}
+            />
           </dl>
         </div>
       </div>

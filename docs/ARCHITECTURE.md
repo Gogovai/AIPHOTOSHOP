@@ -23,6 +23,7 @@ AIPHOTOSHOP/
 ├── packages/
 │   ├── design-schema/        Serializable document contract
 │   ├── design-engine/        Deterministic document operations
+│   ├── document-store/       Persistence: repositories, revisions, history
 │   ├── ai-core/              Intent → validated operations
 │   ├── typography-engine/    Fonts, text layout, type scales
 │   ├── color-engine/         Color spaces, palettes, contrast
@@ -31,7 +32,7 @@ AIPHOTOSHOP/
 ├── docs/
 ├── tests/                    Cross-cutting test suite
 ├── assets/
-├── supabase/                 Reserved for later milestones
+├── supabase/                 Database schema and migrations (M004)
 └── turbo.json
 ```
 
@@ -55,6 +56,10 @@ Rules:
 
 - `design-schema` depends on nothing.
 - `design-engine` depends on `design-schema` only.
+- `document-store` depends on `design-schema` and `design-engine` (its operation
+  pipeline delegates mutations to the engine) and, for the production
+  implementation, on Supabase. Nothing depends on `document-store` except the
+  application.
 - `ai-core` depends on `design-schema` and `design-engine` (to validate
   operations) but never on rendering.
 - `export-engine` depends on `design-schema` (and later on typography and color
@@ -62,11 +67,11 @@ Rules:
 - `ui` depends on nothing domain-specific.
 - `apps/web` composes everything.
 
-As of Milestone 003 the first two links are real: `design-schema` publishes the
-document and node model, `design-engine` depends on it, and `apps/web` imports
-both to render the editor's layers panel and inspector from a real document.
-`ai-core`, `typography-engine`, `color-engine`, and `export-engine` remain
-boundaries only.
+As of Milestone 004 the domain chain is real: `design-schema` publishes the
+document and node model, `design-engine` depends on it, `document-store`
+depends on both and adds persistence, revisions, change sets, and undo/redo, and
+`apps/web` composes them to load and save a real document. `ai-core`,
+`typography-engine`, `color-engine`, and `export-engine` remain boundaries only.
 
 ## Initial architecture (what exists today)
 
@@ -101,6 +106,13 @@ text, shape, svg) with stable opaque ids and lossless JSON serialization.
 reparent, reorder, group, ungroup, set visibility/lock) that always returns a new
 document. Transform, style, and text operations are planned.
 
+`document-store` turns that model into a versioned, persistent artifact. It owns
+the persistence boundary (`DocumentRepository`), two implementations (in-memory
+for local development and tests, Supabase for production), immutable revisions,
+change sets, an operation/change pipeline, and undo/redo history. Persistence
+code contains no layer manipulation: every mutation delegates to the design
+engine.
+
 ### AI system
 
 `ai-core` gains a document reader (compact structured description), a tool
@@ -117,8 +129,40 @@ reproducible and the design stays editable afterwards.
 
 ### Persistence
 
-`supabase/` holds the schema and migrations for storing documents, versions, and
-assets. Persistence is introduced only at the milestone that needs it.
+The canonical `DesignDocument` is the only document model. `supabase/` stores
+**serialized revisions of it** plus the metadata needed to manage versions — it
+never holds a second, competing layer model.
+
+```
+DesignDocument (canonical, design-schema)
+        │  serialize / deserialize + validate
+        ▼
+DocumentRepository (document-store)     create · load · save ·
+        │                               listRevisions · loadRevision · restore
+        ▼
+Supabase (PostgreSQL: documents + revisions, JSONB payloads)
+```
+
+- **Boundary.** Application and editor code depend on `DocumentRepository`, not
+  on Supabase. Supabase queries live only in `document-store`.
+- **Validation at the boundary.** Every stored payload is deserialized and
+  validated before it is returned; a corrupt row raises a typed
+  `DocumentDeserializationError` / `DocumentValidationError` instead of entering
+  the editor. The repository never silently repairs data.
+- **Immutable revisions.** Saving appends a new revision (`1, 2, 3, …`) with a
+  unique `(document_id, revision_number)` constraint and advances the document's
+  `current_revision_id`. History is never overwritten.
+- **Restore is append-only.** Restoring revision N copies its document into a new
+  revision N+1; later revisions stay available.
+- **Atomicity.** Create, save, and restore run through SQL functions invoked via
+  `rpc`, so the revision row and the current-revision pointer are written in one
+  transaction and cannot diverge.
+- **Optimistic concurrency.** A save carries the revision it was loaded against;
+  a mismatch is rejected as a stale-revision conflict rather than overwriting
+  newer work.
+- **Security.** RLS is enabled and denies the public roles by default; server
+  code uses the service-role key. Ownership (`owner_id`) is in the schema, ready
+  for a future auth milestone.
 
 ### Motion
 
@@ -135,11 +179,27 @@ renderer is driven by a time value. Motion is not a separate document format.
 - **Testing.** Domain logic (schema, engine, typography, color) is pure and
   therefore unit-testable without a browser.
 
-## Deliberate constraints at Milestone 003
+## State separation
+
+Three kinds of state stay distinct and never leak into one another:
+
+| State             | Lives in                           | Examples                         |
+| ----------------- | ---------------------------------- | -------------------------------- |
+| Document state    | `DesignDocument` (`design-schema`) | nodes, canvas, metadata          |
+| Editor state      | `EditorState` (`apps/web`)         | selection, active tool, viewport |
+| Persistence state | the save control / repository      | revision id, SAVED/SAVING/ERROR  |
+
+Nothing from editor or persistence state is written into a document, and no
+connection or credential state enters the design schema.
+
+## Deliberate constraints at Milestone 004
 
 - No rendering library is installed; the canvas does not yet draw the document.
 - No AI provider is integrated; `ai-core` is still a boundary.
-- No Supabase project is connected; the editor uses an in-memory demo document.
-- No undo/redo, persistence, transforms, or export.
+- Persistence is real, but Supabase is **not configured in this environment**, so
+  the running app uses the in-memory repository. The Supabase implementation is
+  complete and type-checked but is not exercised without credentials.
+- No autosave; saving is an explicit action.
+- No transforms, text layout, import/export, auth UI, or collaboration.
 
 These are staged, not forgotten. See `docs/DEVELOPMENT_ROADMAP.md`.

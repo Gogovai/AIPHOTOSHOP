@@ -2,8 +2,10 @@
 
 > Status: partially implemented (Milestone 003). The tree, identity, ordering,
 > visibility/locking, validation, and serialization rules below are implemented
-> in `@aiphotoshop/design-schema` and `@aiphotoshop/design-engine`. Node kinds and
-> capabilities marked _planned_ are not implemented yet.
+> in `@aiphotoshop/design-schema` and `@aiphotoshop/design-engine`. Persistence of
+> the same model as immutable revisions is implemented (Milestone 004) in
+> `@aiphotoshop/document-store`. Node kinds and capabilities marked _planned_ are
+> not implemented yet.
 
 ## Purpose
 
@@ -137,11 +139,31 @@ would break one is rejected before it is applied. `validateDocument` reports
 violations with diagnostics that name the offending node and ids, and
 `assertValidDocument` is used at the serialization boundary.
 
+## Persistence and revisions
+
+The layer tree above is the document model. It is **not** redefined by storage.
+`supabase/` stores serialized snapshots of complete `DesignDocument` values as
+immutable revisions; the database never interprets the node tree into rows.
+
+- A saved document keeps every id. Saving and reloading is a serialize /
+  deserialize round-trip through the same model, so identity rules above hold
+  across reloads and restores.
+- A document's **schema version** (`DOCUMENT_SCHEMA_VERSION`, the structure of
+  the model) is distinct from a document's **revision number** (its position in
+  that document's history, `1, 2, 3, …`). They are unrelated counters.
+- Revisions are immutable. Restoring an earlier revision appends a new revision
+  containing its document rather than rewriting history.
+- Stored payloads are validated at the persistence boundary before they reach
+  the editor; a document that violates these invariants is rejected, not
+  repaired.
+
 ## Relationship to the other packages
 
 - `design-schema` defines the node types and serialization form.
 - `design-engine` provides the operations that add, remove, reorder, group, and
   transform nodes.
+- `document-store` persists and versions the document, and orchestrates change
+  sets and undo/redo over the engine.
 - `typography-engine` owns the styling of text nodes.
 - `color-engine` owns the values used by fill, stroke, and color properties.
 - `ai-core` reads the tree and proposes operations against node IDs.

@@ -317,4 +317,14 @@ describe("serialization", () => {
 
     expect(() => parseDocument(raw)).toThrow(/children\[0\] is not a string/);
   });
+
+  it("rejects a node whose id does not match its map key", () => {
+    const doc = buildDocument();
+    const raw = JSON.parse(serializeDocument(doc)) as {
+      nodes: Record<string, { id: string }>;
+    };
+    raw.nodes["hero"]!.id = "impostor";
+
+    expect(() => parseDocument(raw)).toThrow(/key and id must match/);
+  });
 });

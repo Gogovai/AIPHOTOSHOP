@@ -1,0 +1,30 @@
+{
+  "name": "@aiphotoshop/document-store",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Typed persistence boundary for design documents: repositories, revisions, change sets, and undo/redo history.",
+  "type": "module",
+  "sideEffects": false,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json",
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "@aiphotoshop/design-schema": "workspace:*",
+    "@aiphotoshop/design-engine": "workspace:*",
+    "@supabase/supabase-js": "^2.47.0"
+  },
+  "devDependencies": {
+    "eslint": "9.39.5",
+    "typescript": "6.0.3"
+  }
+}

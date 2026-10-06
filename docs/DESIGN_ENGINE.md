@@ -1,8 +1,10 @@
 # Design Engine
 
 > Status: the structural operation set is implemented (Milestone 003) in
-> `@aiphotoshop/design-engine`. Transform, style, text, image, vector, and
-> document operations, plus history/change sets and the persistence pipeline,
+> `@aiphotoshop/design-engine`. The operation pipeline, change sets, undo/redo,
+> and the persistence pipeline are implemented (Milestone 004) in
+> `@aiphotoshop/document-store`, built on top of the engine without duplicating
+> its mutations. Transform, style, text, image, vector, and document operations
 > are _planned_ — see `docs/DEVELOPMENT_ROADMAP.md`.
 
 ## Responsibility
@@ -63,12 +65,34 @@ Applying an operation is a pipeline:
    sibling index) and the resulting document would satisfy every layer-system
    invariant.
 4. **Apply** — return a new document; the input is never mutated.
-5. **Record** — append to the history entry for this change set. _(Planned,
-   Milestone 004.)_
+5. **Record** — `applyOperationWithRecord` re-validates the result and returns
+   the `previousDocument` / `nextDocument` pair used by change sets and history.
 
 If any stage fails the engine throws a `DesignEngineError` with a stable code
 (`NODE_NOT_FOUND`, `ROOT_PROTECTED`, `INVALID_MOVE`, …) and the input document is
 unchanged. Operations are all-or-nothing.
+
+### Orchestration layer (Milestone 004)
+
+`@aiphotoshop/document-store` wraps the engine with the pipeline the rest of the
+system uses. It never re-implements a mutation: every step ultimately calls
+`applyOperation` from `@aiphotoshop/design-engine`.
+
+```
+DocumentOperation
+      ↓  validate + resolve + precheck        (design-engine)
+      ↓  apply → new DesignDocument            (design-engine)
+      ↓  validate resulting document           (design-schema)
+      ↓  record { previousDocument, nextDocument }
+```
+
+- `applyOperationWithRecord(previous, operation)` returns an `AppliedOperation`
+  with enough information to support undo, redo, history, and future AI review.
+- `prepareChangeSet(changeSet)` resolves a stored change set into concrete
+  operations; incomplete or unknown recorded operations throw rather than
+  applying a half-specified edit.
+- `applyChangeSet(document, prepared)` runs every operation through the full
+  pipeline and records each one.
 
 ## Immutability and revisions
 
@@ -86,10 +110,31 @@ This gives the product, for free:
 
 A user instruction such as "make the headline smaller and move the logo up" maps
 to a **change set**: an ordered list of operations marked with its origin
-(`human` or `ai`).
+(`user`, `system`, or `restore`), an optional description, and an id.
 
 The change set is the unit of undo. Undoing an AI change set removes exactly the
-changes the AI made, without touching the designer's own edits.
+changes the AI made, without touching the designer's own edits. Change sets can
+be previewed (`previewChangeSet`), applied (`applyChangeSet`), and summarized
+(`summaryFromChangeSet`) — the boundary future AI milestones use to emit changes
+without ever touching React state, database rows, or document JSON directly.
+
+### Undo / redo
+
+`createHistory()` returns a document-level `History`:
+
+```
+   past          present         future
+   [A]  →  [B]  →  [C]
+```
+
+`apply` records a change set and discards the redo branch; `undo` and `redo`
+move between immutable `DesignDocument` values. Every id is preserved and no
+historical document is mutated. History operates on the document/change layer
+only — it never touches React state, viewport, or selection.
+
+This is **local editing history**. It is deliberately distinct from the
+**persistent revision history** in the repository: undo/redo do not create
+database revisions, and a save captures the current state as a new revision.
 
 ## Operation families
 

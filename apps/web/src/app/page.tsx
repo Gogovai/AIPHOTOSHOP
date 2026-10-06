@@ -34,6 +34,10 @@ const PACKAGES = [
     body: "Deterministic structural operations that return a new document: add, remove, rename, reparent, reorder, group, ungroup.",
   },
   {
+    name: "@aiphotoshop/document-store",
+    body: "Persistence: create, load, save, immutable revisions, change sets and undo/redo, with an in-memory and a Supabase-backed repository.",
+  },
+  {
     name: "@aiphotoshop/ai-core",
     body: "Turns intent into validated design operations. Never returns a flattened image as the result.",
   },
@@ -58,17 +62,16 @@ const PACKAGES = [
 const IN_MILESTONE = [
   "Real document and node model in @aiphotoshop/design-schema",
   "Immutable structural operations in @aiphotoshop/design-engine",
-  "Stable opaque IDs that survive every structural edit and round-trip",
-  "Layers panel and inspector read the real document tree",
-  "Schema, hierarchy, operation and serialization tests",
+  "Persistence in @aiphotoshop/document-store: create, load, save and restore",
+  "Immutable revisions with optimistic-concurrency revision safety",
+  "Operation pipeline, change sets and document-level undo/redo",
+  "Editor loads and saves a real document with honest save state",
 ] as const;
 
 const NOT_YET = [
   "Canvas rendering and selection",
   "Transforms, drag-and-drop and text layout",
-  "Undo / redo and document persistence",
   "AI provider integration",
-  "Supabase persistence",
   "Export pipeline",
 ] as const;
 
@@ -183,8 +186,8 @@ export default function Home() {
                   @aiphotoshop/web
                 </span>
                 <span className="text-[14px] leading-6 text-ink-muted">
-                  The Next.js product surface. It composes the schema and engine into the
-                  professional editor shell.
+                  The Next.js product surface. It composes the schema, engine and persistence into
+                  the professional editor shell.
                 </span>
               </li>
             </ul>
@@ -195,13 +198,14 @@ export default function Home() {
           <div className="mx-auto max-w-6xl px-6 py-20">
             <Eyebrow>Status</Eyebrow>
             <h2 className="mt-5 text-[28px] leading-tight font-semibold tracking-[-0.02em] text-ink sm:text-[34px]">
-              Milestone 003 — Layer engine
+              Milestone 004 — Design document system
             </h2>
             <p className="mt-4 max-w-2xl text-[15px] leading-7 text-ink-muted">
-              The document is now real: a normalized, serializable tree of typed nodes with stable
-              opaque ids, and a deterministic operation set that produces new revisions. The
-              editor&rsquo;s layers panel and inspector read it. Rendering, transforms, editing,
-              undo/redo, AI, persistence and export arrive in their own milestones.
+              Documents are now real, persistent artifacts. The editor loads the current revision,
+              saves an explicit checkpoint as a new immutable revision, and keeps a full revision
+              history you can restore from. Supabase is not connected in this environment, so the
+              app runs on the in-memory repository. Rendering, transforms, editing interactions, AI
+              and export arrive in their own milestones.
             </p>
 
             <div className="mt-12 grid grid-cols-1 gap-10 border-t border-line pt-10 md:grid-cols-2">

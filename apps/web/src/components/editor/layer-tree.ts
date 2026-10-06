@@ -37,7 +37,7 @@ export function flattenLayerTree(document: DesignDocument): LayerRow[] {
     if (visited.has(nodeId)) {
       return;
     }
-    const node = document.nodes[nodeId];
+    const node = document.nodes?.[nodeId];
     if (node === undefined) {
       return;
     }

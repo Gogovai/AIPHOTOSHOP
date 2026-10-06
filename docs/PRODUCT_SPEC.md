@@ -103,14 +103,22 @@ eventually motion. This is not a toy generator.
 
 ## Current state
 
-This repository is at **Milestone 003 — Layer engine**. The monorepo, package
-boundaries, tooling, and product surface from Milestone 001 are in place, and
-the editor shell at `/editor/[projectId]` now renders a **real structured
-document**: `@aiphotoshop/design-schema` provides the normalized document and
-node model with stable opaque ids and lossless JSON serialization, and
-`@aiphotoshop/design-engine` provides the immutable structural operations. The
-layers panel and inspector read that document (an in-memory demo document,
-since persistence is not implemented), and editor selection is kept separate
-from document state. Still not implemented: canvas rendering, transforms,
-editing interactions, undo/redo, AI, persistence, and export. See
-`docs/DEVELOPMENT_ROADMAP.md`.
+This repository is at **Milestone 004 — Design document system**. The editor
+shell at `/editor/[projectId]` loads a **real, persisted, versioned structured
+document**:
+
+- `@aiphotoshop/design-schema` provides the normalized document and node model
+  with stable opaque ids and lossless JSON serialization.
+- `@aiphotoshop/design-engine` provides the immutable structural operations.
+- `@aiphotoshop/document-store` provides the persistence boundary: create, load,
+  save, revision history, revision loading, and restore-as-a-new-revision, plus
+  an operation pipeline, change sets, and undo/redo. A Supabase-backed
+  repository and its schema live in `supabase/`; an in-memory repository is the
+  default until Supabase credentials are supplied.
+- The editor loads the current revision, lets the user save (an explicit
+  checkpoint that appends an immutable revision), and reports honest
+  SAVED / SAVING / ERROR state. Editor selection stays separate from document
+  state, and persistence state stays separate from both.
+
+Still not implemented: canvas rendering, transforms, editing interactions, AI,
+and export. See `docs/DEVELOPMENT_ROADMAP.md`.

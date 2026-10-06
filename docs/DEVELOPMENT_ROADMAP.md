@@ -93,7 +93,7 @@ and every invariant in `docs/LAYER_SYSTEM.md` is covered by tests. ✅
 
 ---
 
-## Milestone 004 — Design document system
+## Milestone 004 — Design document system ✅
 
 **Goal:** documents become real, persistent artifacts.
 
@@ -104,8 +104,41 @@ and every invariant in `docs/LAYER_SYSTEM.md` is covered by tests. ✅
 - The full operation pipeline: validate, resolve, precheck, apply, record.
 - Change sets, undo, and redo.
 
+**Delivered**
+
+- `@aiphotoshop/document-store`: the `DocumentRepository` persistence boundary
+  with an in-memory implementation (local development and tests) and a
+  Supabase-backed implementation; `Revision`, `RevisionSummary`, `ChangeSet`,
+  and typed persistence errors.
+- `supabase/migrations/001-design-documents.sql`: `documents` and `revisions`
+  tables with JSONB payloads, a unique `(document_id, revision_number)`
+  constraint, foreign keys and indexes, RLS enabled and deny-by-default, and
+  atomic `create_document_record` / `create_document_revision` functions so a
+  revision insert and the current-revision pointer are written in one
+  transaction.
+- Immutable revision history: create, load, save, `listRevisions`,
+  `loadRevision`, and `restore` (append a new revision — never rewrite history).
+  Stored payloads are deserialized and validated before use; corrupt rows raise
+  typed errors instead of entering the editor.
+- Optimistic concurrency: `expectedCurrentRevisionId` rejects a stale save with
+  `RevisionConflictError` instead of overwriting newer work.
+- The operation pipeline (`applyOperationWithRecord`), change sets
+  (`prepareChangeSet`, `applyChangeSet`, `previewChangeSet`,
+  `summaryFromChangeSet`), and document-level undo/redo (`History`) — all built
+  on the M003 engine, with no duplicated mutation logic.
+- The editor loads a real document from the repository, saves through an API
+  route, and reports real SAVED / SAVING / ERROR persistence state. Editor
+  state, document state, and persistence state stay separate.
+
+**Not yet implemented (by design)**
+
+- Supabase is not connected in this environment, so the running app uses the
+  in-memory repository; the Supabase path is implemented and type-checked but
+  not exercised without credentials.
+- Canvas rendering, transforms, editing interactions, autosave, AI, and export.
+
 **Done when:** a document survives save, reload, and version restore, and every
-operation is undoable.
+operation is undoable. ✅
 
 ---
 

@@ -8,6 +8,8 @@ import type { DesignDocument } from "@aiphotoshop/design-schema";
  * state rather than drawing the document tree. Rulers are decorative hairlines.
  */
 export function EditorCanvas({ document: doc }: { document: DesignDocument }) {
+  const canvas = doc.canvas ?? { width: 0, height: 0 };
+
   return (
     <section
       aria-label="Canvas viewport"
@@ -27,7 +29,7 @@ export function EditorCanvas({ document: doc }: { document: DesignDocument }) {
         <div
           data-testid="artboard"
           className="flex flex-col items-center justify-center border border-canvas-line bg-white shadow-artboard"
-          style={{ width: doc.canvas.width / 4, height: doc.canvas.height / 4 }}
+          style={{ width: canvas.width / 4, height: canvas.height / 4 }}
         >
           <p className="text-[13px] font-medium text-ink">Your canvas</p>
           <p className="mt-1.5 text-[11px] text-ink-faint">

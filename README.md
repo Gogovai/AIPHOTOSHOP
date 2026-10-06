@@ -33,23 +33,31 @@ Read the full product specification in [`docs/PRODUCT_SPEC.md`](docs/PRODUCT_SPE
 
 ## Current milestone
 
-**Milestone 003 — Layer engine.** Complete.
+**Milestone 004 — Design document system.** Complete.
 
 This repository currently contains the foundation, the professional editor
-shell, and the real structured layer engine:
+shell, the structured layer engine, and real document persistence:
 
 - the pnpm + Turborepo monorepo and its package boundaries;
 - strict TypeScript, ESLint, Prettier, and a Vitest harness;
-- the editor shell at `/editor/[projectId]`;
+- the editor shell at `/editor/[projectId]`, loading a real document from the
+  repository and saving it as a new revision;
 - `@aiphotoshop/design-schema`: the normalized, serializable document and node
   model with stable opaque ids;
 - `@aiphotoshop/design-engine`: deterministic structural operations that return
   a new document;
+- `@aiphotoshop/document-store`: the persistence boundary — repositories,
+  immutable revisions, change sets, and undo/redo — with an in-memory
+  implementation and a Supabase-backed one;
+- the Supabase schema and migrations in `supabase/`;
 - the product, architecture, and layer-system documentation.
 
-Canvas rendering, transforms, editing interactions, undo/redo, persistence, AI,
-and export are **deliberately not implemented yet**. There is no fake AI and no
-fake editor. See [`docs/DEVELOPMENT_ROADMAP.md`](docs/DEVELOPMENT_ROADMAP.md).
+No Supabase project is connected in this environment, so the running app uses
+the in-memory repository; the Supabase implementation is complete but not
+exercised without credentials. Canvas rendering, transforms, editing
+interactions, AI, and export are **deliberately not implemented yet**. There is
+no fake AI and no fake editor. See
+[`docs/DEVELOPMENT_ROADMAP.md`](docs/DEVELOPMENT_ROADMAP.md).
 
 ## Technology stack
 
@@ -95,8 +103,9 @@ corepack enable pnpm
 | `pnpm format:check` | Verify formatting without writing                     |
 | `pnpm verify`       | lint → typecheck → test → build                       |
 
-Copy `.env.example` to `.env` when configuration is needed. Nothing reads it
-yet.
+Copy `.env.example` to `.env` when configuration is needed. Supabase is not
+configured in this environment, so the application uses the in-memory document
+repository.
 
 ## Architecture overview
 
@@ -107,6 +116,7 @@ AIPHOTOSHOP/
 ├── packages/
 │   ├── design-schema/        Serializable design document contract
 │   ├── design-engine/        Deterministic operations on documents
+│   ├── document-store/       Persistence: repositories, revisions, history
 │   ├── ai-core/              Intent → validated design operations
 │   ├── typography-engine/    Fonts, text layout, type scales
 │   ├── color-engine/         Color spaces, palettes, contrast
@@ -115,7 +125,7 @@ AIPHOTOSHOP/
 ├── docs/                     Product and architecture documentation
 ├── tests/                    Cross-cutting test suite
 ├── assets/                   Repository-static assets
-└── supabase/                 Reserved for persistence (Milestone 004)
+└── supabase/                 Database schema and migrations (Milestone 004)
 ```
 
 Dependencies point towards the domain: the applications compose the packages,

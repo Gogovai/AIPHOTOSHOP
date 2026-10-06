@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 
 import { EditorShell } from "@/components/editor/editor-shell";
+import { DEMO_DOCUMENT } from "@/components/editor/demo-document";
 
 /**
  * Editor shell checks: the editor renders its major regions and now shows real
@@ -9,7 +10,9 @@ import { EditorShell } from "@/components/editor/editor-shell";
  * infrastructure is needed.
  */
 function renderShell(): string {
-  return renderToStaticMarkup(<EditorShell projectId="demo" />);
+  return renderToStaticMarkup(
+    <EditorShell projectId="demo" revisionId="rev-1" document={DEMO_DOCUMENT.document} />,
+  );
 }
 
 describe("EditorShell", () => {
