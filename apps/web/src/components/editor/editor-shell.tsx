@@ -3,8 +3,13 @@ import { EditorSidebar } from "@/components/editor/editor-sidebar";
 import { EditorStatusBar } from "@/components/editor/editor-status-bar";
 import { EditorTopBarWithSaveControl } from "@/components/editor/editor-top-bar";
 import { EditorToolbar } from "@/components/editor/editor-toolbar";
+import {
+  EditorDocumentProvider,
+  useEditorDocumentState,
+} from "@/components/editor/editor-document";
 import { createEditorState } from "@/components/editor/editor-state";
 import type { DesignDocument } from "@aiphotoshop/design-schema";
+import { useMemo } from "react";
 
 // NOTE: M003's demo document intentionally carries a full, real layer tree.
 // Importing it directly would add a hard runtime dependency on the demo builder,
@@ -24,6 +29,49 @@ const UNSAFE_DEMO_DOCUMENT: DesignDocument = {
   },
   nodes: {},
 };
+
+/**
+ * Inner client component that uses the document context.
+ * This must be a client component to use the EditorDocumentProvider.
+ */
+function EditorShellClient({
+  projectId,
+  revisionId,
+  document,
+}: {
+  projectId: string;
+  revisionId?: string;
+  document?: DesignDocument;
+}) {
+  const doc = (document ?? UNSAFE_DEMO_DOCUMENT) as DesignDocument;
+  const effectiveRevisionId = revisionId ?? "rev-0";
+  const editorState = useMemo(
+    () => createEditorState({ selectedNodeIds: [doc.rootNodeId] }),
+    [doc.rootNodeId],
+  );
+
+  const { document: currentDoc } = useEditorDocumentState();
+
+  return (
+    <div className="flex h-dvh flex-col overflow-hidden bg-canvas text-canvas-ink">
+      <EditorTopBarWithSaveControl
+        projectId={projectId}
+        revisionId={effectiveRevisionId}
+        documentName={currentDoc.name}
+      />
+
+      <div className="flex min-h-0 flex-1">
+        <EditorToolbar />
+        <main aria-label="Editor workspace" className="flex min-w-0 flex-1">
+          <EditorCanvas document={currentDoc} />
+          <EditorSidebar document={currentDoc} state={editorState} />
+        </main>
+      </div>
+
+      <EditorStatusBar document={currentDoc} state={editorState} />
+    </div>
+  );
+}
 
 /**
  * The full editor layout: top bar, tool rail, canvas viewport, right sidebar
@@ -48,29 +96,15 @@ export function EditorShell({
   document?: DesignDocument;
 }) {
   const doc = (document ?? UNSAFE_DEMO_DOCUMENT) as DesignDocument;
-  const state = createEditorState({
-    selectedNodeIds: [doc.rootNodeId],
-  });
-
   const effectiveRevisionId = revisionId ?? "rev-0";
 
   return (
-    <div className="flex h-dvh flex-col overflow-hidden bg-canvas text-canvas-ink">
-      <EditorTopBarWithSaveControl
-        projectId={projectId}
-        revisionId={effectiveRevisionId}
-        documentName={doc.name}
-      />
-
-      <div className="flex min-h-0 flex-1">
-        <EditorToolbar />
-        <main aria-label="Editor workspace" className="flex min-w-0 flex-1">
-          <EditorCanvas document={doc} />
-          <EditorSidebar document={doc} state={state} />
-        </main>
-      </div>
-
-      <EditorStatusBar document={doc} state={state} />
-    </div>
+    <EditorDocumentProvider
+      initialDocument={doc}
+      initialRevisionId={effectiveRevisionId}
+      projectId={projectId}
+    >
+      <EditorShellClient projectId={projectId} revisionId={revisionId} document={document} />
+    </EditorDocumentProvider>
   );
 }

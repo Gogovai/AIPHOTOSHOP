@@ -160,7 +160,7 @@ export class InMemoryDocumentRepository implements DocumentRepository {
       document: serialized,
       createdAt: new Date().toISOString(),
       parentRevisionId: state.currentRevisionId,
-      changeSet: this.buildChangeSetFromSummary(input.summary),
+      changeSet: input.changeSet ?? this.buildChangeSetFromSummary(input.summary),
     };
 
     state.currentRevisionId = revisionId;

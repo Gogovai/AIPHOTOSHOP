@@ -6,6 +6,7 @@ import {
   createTextNode,
   type DesignDocument,
   type DocumentMetadata,
+  type TextNode,
 } from "@aiphotoshop/design-schema";
 
 import { DocumentNotFoundError, InMemoryDocumentRepository, RevisionConflictError } from "./index";
@@ -179,5 +180,228 @@ describe("InMemoryDocumentRepository", () => {
       throw new Error("expected a container root");
     }
     expect(root.children).toContain(EXTRA_NODE);
+  });
+});
+
+describe("ChangeSet persistence", () => {
+  it("persists and reloads a complete ChangeSet with all operation payloads", async () => {
+    const { repository, revisionId, document } = await createRepository();
+
+    // Create a ChangeSet with complete operation payloads for all 9 operation types
+    const renameOp = {
+      operation: "renameNode" as const,
+      nodeId: document.rootNodeId,
+      name: "Renamed Canvas",
+    };
+    const visibilityOp = {
+      operation: "setVisibility" as const,
+      nodeId: document.rootNodeId,
+      visible: false,
+    };
+    const lockedOp = { operation: "setLocked" as const, nodeId: document.rootNodeId, locked: true };
+
+    const changeSet = {
+      id: "cs-test-complete",
+      source: "user" as const,
+      operations: [renameOp, visibilityOp, lockedOp] as const,
+      description: "Complete ChangeSet test",
+    };
+
+    const saved = await repository.save({
+      document,
+      expectedCurrentRevisionId: revisionId,
+      changeSet,
+    });
+
+    // Load the revision and verify the ChangeSet is stored with complete payloads
+    const loaded = await repository.loadRevision(document.id, saved.revisionId);
+    const loadedChangeSet = loaded.revision.changeSet!;
+    expect(loadedChangeSet.id).toBe("cs-test-complete");
+    expect(loadedChangeSet.operations).toHaveLength(3);
+
+    // Verify each operation has its complete payload
+    const ops = loadedChangeSet.operations;
+    expect(ops[0]!.operation).toBe("renameNode");
+    expect((ops[0] as { operation: "renameNode"; nodeId: string; name: string }).name).toBe(
+      "Renamed Canvas",
+    );
+
+    expect(ops[1]!.operation).toBe("setVisibility");
+    expect(
+      (ops[1] as { operation: "setVisibility"; nodeId: string; visible: boolean }).visible,
+    ).toBe(false);
+
+    expect(ops[2]!.operation).toBe("setLocked");
+    expect((ops[2] as { operation: "setLocked"; nodeId: string; locked: boolean }).locked).toBe(
+      true,
+    );
+  });
+
+  it("stores empty operations array when only summary is provided", async () => {
+    const { repository, revisionId, document } = await createRepository();
+
+    const saved = await repository.save({
+      document,
+      expectedCurrentRevisionId: revisionId,
+      summary: {
+        source: "user",
+        operationCount: 1,
+        operations: ["renameNode"],
+        description: "Summary only",
+      },
+    });
+
+    const loaded = await repository.loadRevision(document.id, saved.revisionId);
+    const loadedChangeSet = loaded.revision.changeSet!;
+    expect(loadedChangeSet.operations).toHaveLength(0);
+    expect(loadedChangeSet.description).toBe("Summary only");
+  });
+
+  it("prefers ChangeSet over summary when both are provided", async () => {
+    const { repository, revisionId, document } = await createRepository();
+
+    const inputChangeSet = {
+      id: "cs-preferred",
+      source: "user" as const,
+      operations: [
+        { operation: "renameNode" as const, nodeId: document.rootNodeId, name: "From ChangeSet" },
+      ],
+      description: "ChangeSet provided",
+    };
+
+    const saved = await repository.save({
+      document,
+      expectedCurrentRevisionId: revisionId,
+      summary: {
+        source: "user",
+        operationCount: 1,
+        operations: ["setLocked"],
+        description: "Summary provided",
+      },
+      changeSet: inputChangeSet,
+    });
+
+    const loaded = await repository.loadRevision(document.id, saved.revisionId);
+    const loadedChangeSet = loaded.revision.changeSet!;
+    expect(loadedChangeSet.id).toBe("cs-preferred");
+    expect(loadedChangeSet.operations).toHaveLength(1);
+    expect((loadedChangeSet.operations[0] as { operation: "renameNode"; name: string }).name).toBe(
+      "From ChangeSet",
+    );
+  });
+});
+
+describe("Reload after save verification", () => {
+  it("loads the edited document after save, while original revision remains unchanged", async () => {
+    const { repository, revisionId, document } = await createRepository();
+
+    // Make an edit to the document
+    const edited = addNode(
+      document,
+      createTextNode({
+        id: EXTRA_NODE,
+        name: "Edited Node",
+        parentId: document.rootNodeId,
+        text: "edited content",
+      }),
+    );
+
+    // Save the edited document
+    const saved = await repository.save({
+      document: edited,
+      expectedCurrentRevisionId: revisionId,
+      summary: {
+        source: "user",
+        operationCount: 1,
+        operations: ["addNode"],
+        description: "Add edited node",
+      },
+    });
+
+    // Load the latest revision - should have the edit
+    const latest = await repository.load(document.id);
+    expect(latest.revisionId).toBe(saved.revisionId);
+    expect(latest.document.nodes[EXTRA_NODE]).toBeDefined();
+    expect(latest.document.nodes[EXTRA_NODE]?.name).toBe("Edited Node");
+    const editedNode = latest.document.nodes[EXTRA_NODE] as TextNode | undefined;
+    expect(editedNode?.text).toBe("edited content");
+
+    // Load the original revision - should NOT have the edit
+    const original = await repository.loadRevision(document.id, revisionId);
+    expect(original.document.nodes[EXTRA_NODE]).toBeUndefined();
+
+    // List revisions - should have both
+    const listed = await repository.listRevisions(document.id);
+    expect(listed.revisions.map((r) => r.revisionNumber)).toEqual([1, 2]);
+  });
+
+  it("restore creates new revision with ChangeSet and preserves history", async () => {
+    const { repository, revisionId, document } = await createRepository();
+
+    // Make first edit
+    const edited1 = addNode(
+      document,
+      createTextNode({
+        id: EXTRA_NODE,
+        name: "Edit 1",
+        parentId: document.rootNodeId,
+        text: "first edit",
+      }),
+    );
+    await repository.save({
+      document: edited1,
+      expectedCurrentRevisionId: revisionId,
+      summary: { source: "user", operationCount: 1 },
+    });
+
+    // Make second edit
+    const extraNode2 = asNodeId("text-extra-2");
+    const edited2 = addNode(
+      edited1,
+      createTextNode({
+        id: extraNode2,
+        name: "Edit 2",
+        parentId: document.rootNodeId,
+        text: "second edit",
+      }),
+    );
+    await repository.save({
+      document: edited2,
+      expectedCurrentRevisionId: "rev-2",
+      summary: { source: "user", operationCount: 1 },
+    });
+
+    // Restore revision 1
+    const restored = await repository.restore(document.id, revisionId, {
+      source: "restore",
+      operationCount: 0,
+      description: "Revert to original",
+    });
+
+    // Current revision should be restored version (matches revision 1)
+    const current = await repository.load(document.id);
+    expect(current.revisionId).toBe(restored.revisionId);
+    expect(current.document.nodes[EXTRA_NODE]).toBeUndefined();
+    expect(current.document.nodes[extraNode2]).toBeUndefined();
+
+    // Original revisions 1, 2, 3 should still exist
+    const rev1 = await repository.loadRevision(document.id, "rev-1");
+    expect(rev1.document.nodes[EXTRA_NODE]).toBeUndefined();
+
+    const rev2 = await repository.loadRevision(document.id, "rev-2");
+    expect(rev2.document.nodes[EXTRA_NODE]).toBeDefined();
+    expect(rev2.document.nodes[extraNode2]).toBeUndefined();
+
+    const rev3 = await repository.loadRevision(document.id, "rev-3");
+    expect(rev3.document.nodes[EXTRA_NODE]).toBeDefined();
+    expect(rev3.document.nodes[extraNode2]).toBeDefined();
+
+    // Restored revision should be revision 4
+    const rev4 = await repository.loadRevision(document.id, "rev-4");
+    expect(rev4.document.nodes[EXTRA_NODE]).toBeUndefined();
+    expect(rev4.document.nodes[extraNode2]).toBeUndefined();
+
+    const listed = await repository.listRevisions(document.id);
+    expect(listed.revisions.map((r) => r.revisionNumber)).toEqual([1, 2, 3, 4]);
   });
 });

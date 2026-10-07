@@ -113,7 +113,7 @@ class SupabaseDocumentRepository implements DocumentRepository {
       p_document: documentAsDbValue(input.document),
       p_name: input.document.name,
       p_expected_current_revision_id: input.expectedCurrentRevisionId,
-      p_change_summary: changeSetAsDbValue(this.buildChangeSet(input.summary)),
+      p_change_summary: changeSetAsDbValue(input.changeSet ?? this.buildChangeSet(input.summary)),
     });
     if (error) throw this.mapWriteError(error, input.document.id, input.expectedCurrentRevisionId);
 

@@ -139,11 +139,16 @@ export interface CreateDocumentInput {
  *
  * `expectedCurrentRevisionId` is the revision the caller loaded against; a save
  * that does not match throws {@link RevisionConflictError}.
+ *
+ * Either `summary` (lightweight audit metadata) or `changeSet` (executable
+ * operations) may be provided. If both are provided, `changeSet` takes
+ * precedence for storage; `summary` is used only for the revision listing.
  */
 export interface SaveDocumentInput {
   readonly document: DesignDocument;
   readonly expectedCurrentRevisionId: string | null;
   readonly summary?: RevisionSummary;
+  readonly changeSet?: ChangeSet;
 }
 
 /** Pairs of revision id and change set id used to rebuild the active undo stack. */
